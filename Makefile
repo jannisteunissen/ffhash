@@ -1,5 +1,5 @@
 FC := gfortran
-FFLAGS := -Wall -O2 -fcheck=all -cpp
+FFLAGS := -Wall -O2 -fcheck=all -cpp -g
 PROGS := test
 
 .phony: all clean
@@ -10,4 +10,6 @@ clean:
 	$(RM) $(PROGS) *.o *.mod
 
 %: %.f90
-	$(FC) -o $@ $^ $(FFLAGS)
+	$(FC) -o $@ $< $(FFLAGS)
+
+$(PROGS): m_khash.f90
