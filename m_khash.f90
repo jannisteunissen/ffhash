@@ -26,6 +26,9 @@
 !    CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 !    SOFTWARE.
 
+  implicit none
+  private
+
   double precision, parameter :: HASH_UPPER = 0.77
 
   type khash_t
@@ -39,87 +42,77 @@
      VAL_TYPE, allocatable       :: vals(:)
   end type khash_t
 
+  public :: khash_t
+  public :: khash_get
+  public :: khash_put
+  public :: khash_del
+
 contains
 
   function khash_get(h, key) result(ix)
     type(khash_t), intent(in) :: h
     KEY_TYPE, intent(in)      :: key
-    integer                   :: ix, i, step, mask
+    integer                   :: ix, i, step
 
-    ix = -1
-
-    if (h%n_buckets < 1) return
-
-    mask = h%n_buckets - 1
     i = hash_index(h, key)
 
     do step = 1, h%n_buckets
-       if (.not. iseither(h, i) .and. h%keys(i) == key) exit
-       print *, "loop", step, i, h%keys(i), key
+       ! Exit when an empty bucket or the key is found
+       if (isempty(h, i) .or. &
+            (.not. isdel(h, i) .and. h%keys(i) == key)) exit
        i = next_index(h, i, step)
     end do
 
-    if (step == h%n_buckets+1) return
-    if (iseither(h, i)) return
-    ix = i
+    if (iseither(h, i)) then
+       ix = -1
+    else
+       ix = i
+    end if
   end function khash_get
 
-  function khash_put(h, key) result(ix)
+  function khash_put(h, key) result(i)
     type(khash_t), intent(inout) :: h
     KEY_TYPE, intent(in)         :: key
-    integer                      :: ix, i, site, step, status
+    integer                      :: i, i_deleted, step, status
 
-    ix = -1
+    i = -1
 
     if (h%n_occupied >= h%upper_bound) then
        if (h%n_buckets > shiftl(h%size, 1)) then
           ! Enough free space, but need to clean up the table
-          print *, "resize clean up", h%n_buckets
           call khash_resize(h, h%n_buckets, status)
           if (status /= 0) return
        else
           ! Increase table size
           call khash_resize(h, 2*h%n_buckets, status)
-          print *, "resize double"
           if (status /= 0) return
        end if
     end if
 
     i = hash_index(h, key)
-    site = -1
+    i_deleted = -1
 
-    if (isempty(h, i)) then
-       ix = i
-    else
+    if (.not. isempty(h, i)) then
        ! Skip over filled slots if they are deleted or have the wrong key. Skipping
        ! over deleted slots ensures that a key is not added twice, in case it is
        ! not at its 'first' hash index, and some keys in between have been deleted.
        do step = 1, h%n_buckets
           if (isempty(h, i) .or. (.not. isdel(h, i) .and. h%keys(i) == key)) exit
-          if (isdel(h, i)) site = i
-
+          if (isdel(h, i)) i_deleted = i
           i = next_index(h, i, step)
        end do
 
-       if (isempty(h, i) .and. site /= -1) then
+       if (isempty(h, i) .and. i_deleted /= -1) then
           ! Use deleted location
-          ix = site
-       else
-          ix = i
+          i = i_deleted
        end if
     end if
 
-    print *, "stored at", ix, key
-    if (isempty(h, ix)) then
-       h%keys(ix) = key
-       call set_isboth_false(h, ix)
-       h%size = h%size + 1
-       h%n_occupied = h%n_occupied + 1
-    else if (isdel(h, ix)) then
-       h%keys(ix) = key
-       call set_isboth_false(h, ix)
-       h%size = h%size + 1
-    end if
+    h%keys(i) = key
+    h%size    = h%size + 1
+    if (isempty(h, i)) h%n_occupied = h%n_occupied + 1
+    call set_isboth_false(h, i)
+
   end function khash_put
 
   subroutine khash_resize(h, new_n_buckets, status)
@@ -135,9 +128,9 @@ contains
        n_new = 2 * n_new
     end do
 
-    if (h%size >= ceiling(n_new * HASH_UPPER)) then
+    if (h%size >= nint(n_new * HASH_UPPER)) then
        ! Requested size is too small
-       status = 1
+       status = -1
        return
     end if
 
@@ -150,16 +143,15 @@ contains
     hnew%size        = h%size
     hnew%n_occupied  = h%size
     hnew%n_buckets   = n_new
-    hnew%upper_bound = ceiling(n_new * HASH_UPPER)
+    hnew%upper_bound = nint(n_new * HASH_UPPER)
     hnew%mask        = n_new - 1
 
     do j = 0, h%n_buckets-1
-       print *, j, iseither(h, j)
        if (.not. iseither(h, j)) then
           ! Find a new index
-          i = hash_index(hnew, j)
+          i = hash_index(hnew, h%keys(j))
 
-          do step = 1, h%n_buckets
+          do step = 1, hnew%n_buckets
              if (isempty(hnew, i)) exit
              i = next_index(hnew, i, step)
           end do
@@ -167,13 +159,29 @@ contains
           hnew%vals(i) = h%vals(j)
           hnew%keys(i) = h%keys(j)
           call set_isempty_false(hnew, i)
-          print *, "move", j, i
        end if
     end do
 
     h      = hnew
     status = 0
   end subroutine khash_resize
+
+  subroutine khash_del(h, ix, status)
+    type(khash_t), intent(inout) :: h
+    integer, intent(in)          :: ix
+    integer, intent(out)         :: status
+
+
+    if (ix < lbound(h%keys, 1) .or. ix > ubound(h%keys, 1)) then
+       status = -1
+    else if (iseither(h, ix)) then
+       status = -1
+    else
+       call set_isdel_true(h, ix)
+       h%size = h%size - 1
+       status = 0
+    end if
+  end subroutine khash_del
 
   pure logical function isempty(h, i)
     type(khash_t), intent(in) :: h
@@ -190,7 +198,7 @@ contains
   pure logical function iseither(h, i)
     type(khash_t), intent(in) :: h
     integer, intent(in)       :: i
-    iseither = (iand(h%flags(i), 3) == 2)
+    iseither = (iand(h%flags(i), 3) /= 1)
   end function iseither
 
   pure subroutine set_isboth_false(h, i)
@@ -204,6 +212,12 @@ contains
     integer, intent(in)          :: i
     h%flags(i) = ior(h%flags(i), 1)
   end subroutine set_isempty_false
+
+  pure subroutine set_isdel_true(h, i)
+    type(khash_t), intent(inout) :: h
+    integer, intent(in)          :: i
+    h%flags(i) = ior(h%flags(i), 2)
+  end subroutine set_isdel_true
 
   pure integer function hash_index(h, key) result(i)
     type(khash_t), intent(in) :: h
