@@ -32,14 +32,14 @@
   double precision, parameter :: HASH_UPPER = 0.77
 
   type khash_t
-     integer                     :: n_buckets   = 0
-     integer                     :: size        = 0
-     integer                     :: n_occupied  = 0
-     integer                     :: upper_bound = 0
-     integer                     :: mask = 0
-     integer(int32), allocatable :: flags(:)
-     KEY_TYPE, allocatable       :: keys(:)
-     VAL_TYPE, allocatable       :: vals(:)
+     integer                :: n_buckets   = 0
+     integer                :: size        = 0
+     integer                :: n_occupied  = 0
+     integer                :: upper_bound = 0
+     integer                :: mask        = 0
+     character, allocatable :: flags(:)
+     KEY_TYPE, allocatable  :: keys(:)
+     VAL_TYPE, allocatable  :: vals(:)
   end type khash_t
 
   public :: khash_t
@@ -139,7 +139,7 @@ contains
          hnew%vals(0:n_new-1), stat=status)
     if (status /= 0) return
 
-    hnew%flags(:)    = 0
+    hnew%flags(:)    = achar(0)
     hnew%size        = h%size
     hnew%n_occupied  = h%size
     hnew%n_buckets   = n_new
@@ -186,37 +186,37 @@ contains
   pure logical function isempty(h, i)
     type(khash_t), intent(in) :: h
     integer, intent(in)       :: i
-    isempty = (iand(h%flags(i), 1) == 0)
+    isempty = (iand(iachar(h%flags(i)), 1) == 0)
   end function isempty
 
   pure logical function isdel(h, i)
     type(khash_t), intent(in) :: h
     integer, intent(in)       :: i
-    isdel = (iand(h%flags(i), 2) /= 0)
+    isdel = (iand(iachar(h%flags(i)), 2) /= 0)
   end function isdel
 
   pure logical function iseither(h, i)
     type(khash_t), intent(in) :: h
     integer, intent(in)       :: i
-    iseither = (iand(h%flags(i), 3) /= 1)
+    iseither = (iand(iachar(h%flags(i)), 3) /= 1)
   end function iseither
 
   pure subroutine set_isboth_false(h, i)
     type(khash_t), intent(inout) :: h
     integer, intent(in)          :: i
-    h%flags(i) = 1
+    h%flags(i) = achar(1)
   end subroutine set_isboth_false
 
   pure subroutine set_isempty_false(h, i)
     type(khash_t), intent(inout) :: h
     integer, intent(in)          :: i
-    h%flags(i) = ior(h%flags(i), 1)
+    h%flags(i) = achar(ior(iachar(h%flags(i)), 1))
   end subroutine set_isempty_false
 
   pure subroutine set_isdel_true(h, i)
     type(khash_t), intent(inout) :: h
     integer, intent(in)          :: i
-    h%flags(i) = ior(h%flags(i), 2)
+    h%flags(i) = achar(ior(iachar(h%flags(i)), 2))
   end subroutine set_isdel_true
 
   pure integer function hash_index(h, key) result(i)
