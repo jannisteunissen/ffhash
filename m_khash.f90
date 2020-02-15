@@ -49,7 +49,7 @@ module MODULE_NAME
      integer                :: n_occupied  = 0
      integer                :: upper_bound = 0
      integer                :: mask        = 0
-     character, allocatable :: flags(:)
+     integer(int8), allocatable :: flags(:)
      KEY_TYPE, allocatable  :: keys(:)
 #ifdef VAL_TYPE
      VAL_TYPE, allocatable  :: vals(:)
@@ -80,7 +80,7 @@ contains
 
     ix = -1
     if (step == h%n_buckets + 1) return ! Not found in loop
-    if (khash_not_exists(h, i)) return  ! Exited, but key not found
+    if (.not. khash_exists(h, i)) return  ! Exited, but key not found
     ix = i
   end function khash_get
 
@@ -157,7 +157,7 @@ contains
 #endif
     if (status /= 0) return
 
-    hnew%flags(:)    = achar(0)
+    hnew%flags(:)    = 0
     hnew%size        = h%size
     hnew%n_occupied  = h%size
     hnew%n_buckets   = n_new
@@ -177,7 +177,7 @@ contains
           hnew%vals(i) = h%vals(j)
 #endif
           hnew%keys(i) = h%keys(j)
-          call set_isempty_false(hnew, i)
+          call set_isboth_false(hnew, i)
        end if
     end do
 
@@ -193,7 +193,7 @@ contains
 
     if (ix < lbound(h%keys, 1) .or. ix > ubound(h%keys, 1)) then
        status = -1
-    else if (khash_not_exists(h, ix)) then
+    else if (.not. khash_exists(h, ix)) then
        status = -1
     else
        call set_isdel_true(h, ix)
@@ -205,43 +205,31 @@ contains
   pure logical function isempty(h, i)
     type(khash_t), intent(in) :: h
     integer, intent(in)       :: i
-    isempty = (iand(iachar(h%flags(i)), 1) == 0)
+    isempty = (iand(h%flags(i), 1_int8) == 0_int8)
   end function isempty
 
   pure logical function isdel(h, i)
     type(khash_t), intent(in) :: h
     integer, intent(in)       :: i
-    isdel = (iand(iachar(h%flags(i)), 2) /= 0)
+    isdel = (iand(h%flags(i), 2) /= 0)
   end function isdel
 
   pure logical function khash_exists(h, i)
     type(khash_t), intent(in) :: h
     integer, intent(in)       :: i
-    khash_exists = (iand(iachar(h%flags(i)), 3) == 1)
+    khash_exists = (iand(h%flags(i), 3_int8) == 1_int8)
   end function khash_exists
-
-  pure logical function khash_not_exists(h, i)
-    type(khash_t), intent(in) :: h
-    integer, intent(in)       :: i
-    khash_not_exists = (iand(iachar(h%flags(i)), 3) /= 1)
-  end function khash_not_exists
 
   pure subroutine set_isboth_false(h, i)
     type(khash_t), intent(inout) :: h
     integer, intent(in)          :: i
-    h%flags(i) = achar(1)
+    h%flags(i) = 1_int8
   end subroutine set_isboth_false
-
-  pure subroutine set_isempty_false(h, i)
-    type(khash_t), intent(inout) :: h
-    integer, intent(in)          :: i
-    h%flags(i) = achar(ior(iachar(h%flags(i)), 1))
-  end subroutine set_isempty_false
 
   pure subroutine set_isdel_true(h, i)
     type(khash_t), intent(inout) :: h
     integer, intent(in)          :: i
-    h%flags(i) = achar(ior(iachar(h%flags(i)), 2))
+    h%flags(i) = ior(h%flags(i), 2_int8)
   end subroutine set_isdel_true
 
   pure integer function hash_index(h, key) result(i)
