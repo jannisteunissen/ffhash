@@ -26,6 +26,18 @@
 !    CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 !    SOFTWARE.
 
+! If defined, use a custom name for the module
+#ifndef MODULE_NAME
+#define MODULE_NAME m_khash
+#endif
+
+module MODULE_NAME
+  use iso_fortran_env
+  ! If defined, import extra module with this statement
+#ifdef USE_MODULE
+  USE_MODULE
+#endif
+
   implicit none
   private
 
@@ -46,6 +58,7 @@
   public :: khash_get
   public :: khash_put
   public :: khash_del
+  public :: khash_exists
 
 contains
 
@@ -63,11 +76,10 @@ contains
        i = next_index(h, i, step)
     end do
 
-    if (iseither(h, i)) then
-       ix = -1
-    else
-       ix = i
-    end if
+    ix = -1
+    if (step == h%n_buckets + 1) return ! Not found in loop
+    if (khash_not_exists(h, i)) return          ! Exited, but key not found
+    ix = i
   end function khash_get
 
   function khash_put(h, key) result(i)
@@ -147,7 +159,7 @@ contains
     hnew%mask        = n_new - 1
 
     do j = 0, h%n_buckets-1
-       if (.not. iseither(h, j)) then
+       if (khash_exists(h, j)) then
           ! Find a new index
           i = hash_index(hnew, h%keys(j))
 
@@ -174,7 +186,7 @@ contains
 
     if (ix < lbound(h%keys, 1) .or. ix > ubound(h%keys, 1)) then
        status = -1
-    else if (iseither(h, ix)) then
+    else if (khash_not_exists(h, ix)) then
        status = -1
     else
        call set_isdel_true(h, ix)
@@ -195,11 +207,17 @@ contains
     isdel = (iand(iachar(h%flags(i)), 2) /= 0)
   end function isdel
 
-  pure logical function iseither(h, i)
+  pure logical function khash_exists(h, i)
     type(khash_t), intent(in) :: h
     integer, intent(in)       :: i
-    iseither = (iand(iachar(h%flags(i)), 3) /= 1)
-  end function iseither
+    khash_exists = (iand(iachar(h%flags(i)), 3) == 1)
+  end function khash_exists
+
+  pure logical function khash_not_exists(h, i)
+    type(khash_t), intent(in) :: h
+    integer, intent(in)       :: i
+    khash_not_exists = (iand(iachar(h%flags(i)), 3) /= 1)
+  end function khash_not_exists
 
   pure subroutine set_isboth_false(h, i)
     type(khash_t), intent(inout) :: h
@@ -236,7 +254,7 @@ contains
   pure function hash_function(key) result(hash)
     KEY_TYPE, intent(in)   :: key
     integer(int32)         :: hash, n
-    integer, parameter     :: n_bytes = ceiling(bit_size(key)*0.125d0)
+    integer, parameter     :: n_bytes = ceiling(storage_size(key)*0.125d0)
     character(len=n_bytes) :: buf
 
     buf = transfer(key, buf)
@@ -247,3 +265,4 @@ contains
     end do
   end function hash_function
 #endif
+end module MODULE_NAME
