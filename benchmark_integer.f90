@@ -1,5 +1,5 @@
 #define KEY_TYPE integer(int32)
-#define VAL_TYPE integer(int32)
+! #define VAL_TYPE integer(int32)
 #include "m_khash.f90"
 
 program benchmark_integer

@@ -51,7 +51,9 @@ module MODULE_NAME
      integer                :: mask        = 0
      character, allocatable :: flags(:)
      KEY_TYPE, allocatable  :: keys(:)
+#ifdef VAL_TYPE
      VAL_TYPE, allocatable  :: vals(:)
+#endif
   end type khash_t
 
   public :: khash_t
@@ -78,7 +80,7 @@ contains
 
     ix = -1
     if (step == h%n_buckets + 1) return ! Not found in loop
-    if (khash_not_exists(h, i)) return          ! Exited, but key not found
+    if (khash_not_exists(h, i)) return  ! Exited, but key not found
     ix = i
   end function khash_get
 
@@ -147,8 +149,12 @@ contains
     end if
 
     ! Expand or shrink table
+#ifdef VAL_TYPE
     allocate(hnew%flags(0:n_new-1), hnew%keys(0:n_new-1), &
          hnew%vals(0:n_new-1), stat=status)
+#else
+    allocate(hnew%flags(0:n_new-1), hnew%keys(0:n_new-1), stat=status)
+#endif
     if (status /= 0) return
 
     hnew%flags(:)    = achar(0)
@@ -167,8 +173,9 @@ contains
              if (isempty(hnew, i)) exit
              i = next_index(hnew, i, step)
           end do
-
+#ifdef VAL_TYPE
           hnew%vals(i) = h%vals(j)
+#endif
           hnew%keys(i) = h%keys(j)
           call set_isempty_false(hnew, i)
        end if
