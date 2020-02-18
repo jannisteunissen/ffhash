@@ -1,45 +1,10 @@
-!    Fortran implementation of khash by Jannis Teunissen
-!
-!    Original khash license copied below:
-!
-!    The MIT License
-!
-!    Copyright (c) 2008, 2009, 2011 by Attractive Chaos <attractor@live.co.uk>
-
-!    Permission is hereby granted, free of charge, to any person obtaining
-!    a copy of this software and associated documentation files (the
-!    "Software"), to deal in the Software without restriction, including
-!    without limitation the rights to use, copy, modify, merge, publish,
-!    distribute, sublicense, and/or sell copies of the Software, and to
-!    permit persons to whom the Software is furnished to do so, subject to
-!    the following conditions:
-
-!    The above copyright notice and this permission notice shall be
-!    included in all copies or substantial portions of the Software.
-
-!    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-!    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-!    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-!    NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
-!    BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
-!    ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-!    CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-!    SOFTWARE.
-
-! If defined, use a custom name for the module
-#ifndef MODULE_NAME
-#define MODULE_NAME m_khash
-#endif
-
-module MODULE_NAME
-  use iso_fortran_env
-  ! If defined, import extra module with this statement
-#ifdef USE_MODULE
-  USE_MODULE
-#endif
-
-  implicit none
-  private
+  ! This file should be included in a module ... end module block
+  ! For example:
+  ! module m_ffhash
+  ! #define KEY_TYPE integer
+  ! #define VAL_TYPE integer (optional)
+  ! #include "ffhash_inc.f90"
+  ! end module m_ffhash
 
   double precision, parameter :: HASH_UPPER = 0.77
 
@@ -49,7 +14,7 @@ module MODULE_NAME
      integer                :: n_occupied  = 0
      integer                :: upper_bound = 0
      integer                :: mask        = 0
-     integer(int8), allocatable :: flags(:)
+     character, allocatable :: flags(:)
      KEY_TYPE, allocatable  :: keys(:)
 #ifdef VAL_TYPE
      VAL_TYPE, allocatable  :: vals(:)
@@ -92,7 +57,7 @@ contains
     i = -1
 
     if (h%n_occupied >= h%upper_bound) then
-       if (h%n_buckets > shiftl(h%size, 1)) then
+       if (h%size <= h%upper_bound/2) then
           ! Enough free space, but need to clean up the table
           call khash_resize(h, h%n_buckets, status)
           if (status /= 0) return
@@ -122,10 +87,18 @@ contains
        end if
     end if
 
-    h%keys(i) = key
-    h%size    = h%size + 1
-    if (isempty(h, i)) h%n_occupied = h%n_occupied + 1
-    call set_isboth_false(h, i)
+    if (isempty(h, i)) then
+       h%n_occupied = h%n_occupied + 1
+       h%size    = h%size + 1
+       h%keys(i) = key
+       call set_isboth_false(h, i)
+    else if (isdel(h, i)) then
+       h%n_occupied = h%n_occupied + 1
+       h%size    = h%size + 1
+       h%keys(i) = key
+       call set_isboth_false(h, i)
+    end if
+    ! If key is already present, do nothing
 
   end function khash_put
 
@@ -157,7 +130,7 @@ contains
 #endif
     if (status /= 0) return
 
-    hnew%flags(:)    = 0
+    hnew%flags(:)    = achar(0)
     hnew%size        = h%size
     hnew%n_occupied  = h%size
     hnew%n_buckets   = n_new
@@ -205,31 +178,31 @@ contains
   pure logical function isempty(h, i)
     type(khash_t), intent(in) :: h
     integer, intent(in)       :: i
-    isempty = (iand(h%flags(i), 1_int8) == 0_int8)
+    isempty = (iand(iachar(h%flags(i)), 1) == 0)
   end function isempty
 
   pure logical function isdel(h, i)
     type(khash_t), intent(in) :: h
     integer, intent(in)       :: i
-    isdel = (iand(h%flags(i), 2) /= 0)
+    isdel = (iand(iachar(h%flags(i)), 2) /= 0)
   end function isdel
 
   pure logical function khash_exists(h, i)
     type(khash_t), intent(in) :: h
     integer, intent(in)       :: i
-    khash_exists = (iand(h%flags(i), 3_int8) == 1_int8)
+    khash_exists = (iachar(h%flags(i)) == 1)
   end function khash_exists
 
   pure subroutine set_isboth_false(h, i)
     type(khash_t), intent(inout) :: h
     integer, intent(in)          :: i
-    h%flags(i) = 1_int8
+    h%flags(i) = achar(1)
   end subroutine set_isboth_false
 
   pure subroutine set_isdel_true(h, i)
     type(khash_t), intent(inout) :: h
     integer, intent(in)          :: i
-    h%flags(i) = ior(h%flags(i), 2_int8)
+    h%flags(i) = achar(ior(iachar(h%flags(i)), 2))
   end subroutine set_isdel_true
 
   pure integer function hash_index(h, key) result(i)
@@ -238,26 +211,98 @@ contains
     i = iand(hash_function(key), h%mask)
   end function hash_index
 
-  pure integer function next_index(h, i_prev, step) result(i_new)
+  pure integer function next_index(h, i_prev, step)
     type(khash_t), intent(in) :: h
     integer, intent(in)       :: i_prev
     integer, intent(in)       :: step
-    i_new = iand(i_prev + step, h%mask)
+    next_index = iand(i_prev + step, h%mask)
   end function next_index
 
-#ifndef hash_function
+#ifndef CUSTOM_HASH_FUNCTION
   pure function hash_function(key) result(hash)
     KEY_TYPE, intent(in)   :: key
-    integer(int32)         :: hash, n
+    integer                :: hash
     integer, parameter     :: n_bytes = ceiling(storage_size(key)*0.125d0)
+    integer, parameter     :: seed    = 42
     character(len=n_bytes) :: buf
 
-    buf = transfer(key, buf)
-    hash = 5381
-
-    do n = 1, n_bytes
-       hash = (shiftl(hash, 5) + hash) + iachar(buf(n:n)) ! hash * 33 + char
-    end do
+    call MurmurHash3_x86_32(transfer(key, buf), n_bytes, seed, hash)
   end function hash_function
+
+  pure integer(int32) function rotl32(x, r)
+    use iso_fortran_env
+    integer(int32), intent(in) :: x
+    integer(int8), intent(in)  :: r
+    rotl32 = ior(shiftl(x, r), shiftr(x, (32 - r)))
+  end function rotl32
+
+  pure integer(int64) function rotl64(x, r)
+    use iso_fortran_env
+    integer(int64), intent(in) :: x
+    integer(int8), intent(in)  :: r
+    rotl64 = ior(shiftl(x, r), shiftr(x, (64 - r)))
+  end function rotl64
+
+  ! Finalization mix - force all bits of a hash block to avalanche
+  pure integer(int32) function fmix32(h_in) result(h)
+    use iso_fortran_env
+    integer(int32), intent(in) :: h_in
+    h = h_in
+    h = ieor(h, shiftr(h, 16))
+    h = h * (-2048144789) !0x85ebca6b
+    h = ieor(h, shiftr(h, 13))
+    h = h * (-1028477387) !0xc2b2ae35
+    h = ieor(h, shiftr(h, 16))
+  end function fmix32
+
+  pure subroutine MurmurHash3_x86_32(key, klen, seed, hash)
+    use iso_fortran_env
+    integer, intent(in)             :: klen
+    character(len=klen), intent(in) :: key
+    integer(int32), intent(in)      :: seed
+    integer(int32), intent(out)     :: hash
+    integer                         :: i, i0, n, nblocks
+    integer(int32)                  :: h1, k1
+    integer(int32), parameter       :: c1        = -862048943 ! 0xcc9e2d51
+    integer(int32), parameter       :: c2        = 461845907  !0x1b873593
+    integer, parameter              :: shifts(3) = [0, 8, 16]
+
+    h1      = seed
+    nblocks = shiftr(klen, 2)    ! nblocks/4
+
+    ! body
+    do i = 1, nblocks
+       k1 = transfer(key(i*4-3:i*4), k1)
+
+       k1 = k1 * c1
+       k1 = rotl32(k1,15_int8)
+       k1 = k1 * c2
+
+       h1 = ieor(h1, k1)
+       h1 = rotl32(h1,13_int8)
+       h1 = h1 * 5 - 430675100  ! 0xe6546b64
+    end do
+
+    ! tail
+    k1 = 0
+    i  = iand(klen, 3)
+    i0 = 4 * nblocks
+
+    do n = i, 1, -1
+       k1 = ieor(k1, shiftl(iachar(key(i0+n:i0+n)), shifts(n)))
+    end do
+
+    ! Check if the above loop was executed
+    if (i >= 1) then
+       k1 = k1 * c1
+       k1 = rotl32(k1,15_int8)
+       k1 = k1 * c2
+       h1 = ieor(h1, k1)
+    end if
+
+    ! finalization
+    h1 = ieor(h1, klen)
+    h1 = fmix32(h1)
+    hash = h1
+  end subroutine MurmurHash3_x86_32
 #endif
-end module MODULE_NAME

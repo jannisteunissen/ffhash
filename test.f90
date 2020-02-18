@@ -1,9 +1,11 @@
-#define KEY_TYPE integer(int32)
-#define VAL_TYPE integer(int32)
-#include "m_khash.f90"
+module m_ffhash
+#define KEY_TYPE integer
+#define VAL_TYPE integer
+#include "ffhash_inc.f90"
+end module m_ffhash
 
 program test
-  use m_khash
+  use m_ffhash
 
   implicit none
 

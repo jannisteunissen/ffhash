@@ -12,4 +12,4 @@ clean:
 %: %.f90
 	$(FC) -o $@ $< $(FFLAGS)
 
-$(PROGS): m_khash.f90
+$(PROGS): ffhash_inc.f90
