@@ -9,8 +9,8 @@ program benchmark_integer
 
   implicit none
 
-  type(khash_t)        :: h
-  integer, parameter   :: n_max = 5*1000*1000
+  type(ffh_t)        :: h
+  integer, parameter   :: n_max = 20*1000*1000
   integer              :: n, i, status
   integer              :: keys(n_max)
   integer, allocatable :: key_counts(:)
@@ -21,18 +21,18 @@ program benchmark_integer
 
   call cpu_time(t_start)
   do n = 1, n_max
-     i = khash_get(h, keys(n))
+     i = ffh_get_index(h, keys(n))
 
      if (i /= -1) then
-        call khash_del(h, i, status)
+        call ffh_delete_index(h, i, status)
      else
-        i = khash_put(h, keys(n))
+        i = ffh_store_key(h, keys(n))
      end if
   end do
   call cpu_time(t_end)
 
   print *, "Elapsed time", t_end - t_start
-  print *, "Size/n_occupied/n_buckets", h%size, h%n_occupied, h%n_buckets
+  print *, "Size/n_occupied/n_buckets", h%n_keys_stored, h%n_occupied, h%n_buckets
 
   ! Count number of keys that occur an odd number of times
   allocate(key_counts(minval(keys):maxval(keys)))
@@ -42,7 +42,7 @@ program benchmark_integer
   end do
   n = sum(iand(key_counts, 1))
 
-  if (n /= h%size) then
+  if (n /= h%n_keys_stored) then
      error stop "Incorrect h%size"
   else
      print *, "Test passed (h%size is correct)"
