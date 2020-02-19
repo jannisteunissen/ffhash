@@ -1,6 +1,6 @@
 FC := gfortran
 FFLAGS := -Wall -O2 -cpp -g
-PROGS := test benchmark_integer
+PROGS := example test benchmark_integer
 
 .phony: all clean
 
