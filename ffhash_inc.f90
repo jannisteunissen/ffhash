@@ -6,14 +6,13 @@
   ! #include "ffhash_inc.f90"
   ! end module m_ffhash
 
-  double precision, parameter :: HASH_UPPER = 0.77
-
   type khash_t
      integer                :: n_buckets   = 0
      integer                :: size        = 0
      integer                :: n_occupied  = 0
      integer                :: upper_bound = 0
      integer                :: mask        = 0
+     double precision       :: hash_upper  = 0.77d0
      character, allocatable :: flags(:)
      KEY_TYPE, allocatable  :: keys(:)
 #ifdef VAL_TYPE
@@ -115,7 +114,7 @@ contains
        n_new = 2 * n_new
     end do
 
-    if (h%size >= nint(n_new * HASH_UPPER)) then
+    if (h%size >= nint(n_new * h%hash_upper)) then
        ! Requested size is too small
        status = -1
        return
@@ -134,7 +133,8 @@ contains
     hnew%size        = h%size
     hnew%n_occupied  = h%size
     hnew%n_buckets   = n_new
-    hnew%upper_bound = nint(n_new * HASH_UPPER)
+    hnew%hash_upper  = h%hash_upper
+    hnew%upper_bound = nint(n_new * hnew%hash_upper)
     hnew%mask        = n_new - 1
 
     do j = 0, h%n_buckets-1
