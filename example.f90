@@ -1,6 +1,7 @@
 module m_ffhash
-#define KEY_TYPE character(len=20)
-#define VAL_TYPE integer
+#define FFH_KEY_TYPE character(len=20)
+#define FFH_KEY_IS_STRING
+#define FFH_VAL_TYPE integer
 #include "ffhash_inc.f90"
 end module m_ffhash
 
@@ -10,22 +11,15 @@ program example
   implicit none
 
   type(ffh_t) :: h
-  character(len=20) :: string
-  integer :: day, month, year, status
+  integer     :: day, month, year, status
 
-  string = "day"
-  call ffh_store_value(h, string, 20, status)
-  string = "month"
-  call ffh_store_value(h, string, 2, status)
-  string = "year"
-  call ffh_store_value(h, string, 2020, status)
+  call ffh_store_value(h, "day", 20, status)
+  call ffh_store_value(h, "month", 2, status)
+  call ffh_store_value(h, "year", 2020, status)
 
-  string = "day"
-  call ffh_get_value(h, string, day, status)
-  string = "month"
-  call ffh_get_value(h, string, month, status)
-  string = "year"
-  call ffh_get_value(h, string, year, status)
+  call ffh_get_value(h, "day", day, status)
+  call ffh_get_value(h, "month", month, status)
+  call ffh_get_value(h, "year", year, status)
 
   print *, day, month, year
 end program example

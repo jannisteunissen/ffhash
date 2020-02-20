@@ -1,5 +1,5 @@
 module m_ffhash
-#define KEY_TYPE integer
+#define FFH_KEY_TYPE integer
 #include "ffhash_inc.f90"
 end module m_ffhash
 
@@ -10,7 +10,7 @@ program benchmark_integer
   implicit none
 
   type(ffh_t)        :: h
-  integer, parameter   :: n_max = 20*1000*1000
+  integer, parameter   :: n_max = 5*1000*1000
   integer              :: n, i, status
   integer              :: keys(n_max)
   integer, allocatable :: key_counts(:)

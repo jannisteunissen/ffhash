@@ -1,32 +1,38 @@
   ! This file should be included in a module ... end module block
   ! For example:
   ! module m_ffhash
-  ! #define KEY_TYPE integer
-  ! #define VAL_TYPE integer (optional)
+  ! #define FFH_KEY_TYPE integer
+  ! #define FFH_VAL_TYPE integer (optional)
   ! #include "ffhash_inc.f90"
   ! end module m_ffhash
+
+#ifdef FFH_KEY_IS_STRING
+#define FFH_KEY_ARG character(len=*)
+#else
+#define FFH_KEY_ARG FFH_KEY_TYPE
+#endif
 
   !> Type storing the hash table
   type ffh_t
      !> Number of buckets in hash table
-     integer                :: n_buckets       = 0
+     integer                   :: n_buckets       = 0
      !> Number of keys stored in hash table
-     integer                :: n_keys_stored   = 0
+     integer                   :: n_keys_stored   = 0
      !> Number of keys stored plus deleted keys
-     integer                :: n_occupied      = 0
+     integer                   :: n_occupied      = 0
      !> Maximum number of occupied buckets
-     integer                :: n_occupied_max  = 0
+     integer                   :: n_occupied_max  = 0
      !> Mask to convert hash to index
-     integer                :: hash_mask       = 0
+     integer                   :: hash_mask       = 0
      !> Maximum load factor for the hash table
-     double precision       :: max_load_factor = 0.7d0
+     double precision          :: max_load_factor = 0.7d0
      !> Flags indicating whether buckets are empty or deleted
-     character, allocatable :: flags(:)
+     character, allocatable    :: flags(:)
      !> Keys of the hash table
-     KEY_TYPE, allocatable  :: keys(:)
-#ifdef VAL_TYPE
+     FFH_KEY_TYPE, allocatable :: keys(:)
+#ifdef FFH_VAL_TYPE
      !> Values stored for the keys
-     VAL_TYPE, allocatable  :: vals(:)
+     FFH_VAL_TYPE, allocatable :: vals(:)
 #endif
   end type ffh_t
 
@@ -43,7 +49,7 @@
   public :: ffh_store_key
   public :: ffh_delete
   public :: ffh_valid_index
-#ifdef VAL_TYPE
+#ifdef FFH_VAL_TYPE
   public :: ffh_get_value
   public :: ffh_store_value
 #endif
@@ -53,7 +59,7 @@ contains
   !> Get index corresponding to a key
   function ffh_get_index(h, key) result(ix)
     type(ffh_t), intent(in) :: h
-    KEY_TYPE, intent(in)    :: key
+    FFH_KEY_ARG, intent(in) :: key
     integer                 :: ix, i, step
 
     i = hash_index(h, key)
@@ -71,13 +77,13 @@ contains
     ix = i
   end function ffh_get_index
 
-#ifdef VAL_TYPE
+#ifdef FFH_VAL_TYPE
   !> Get the value corresponding to a key
   subroutine ffh_get_value(h, key, val, status)
-    type(ffh_t), intent(in) :: h
-    KEY_TYPE, intent(in)    :: key
-    VAL_TYPE, intent(inout) :: val
-    integer, intent(out)    :: status
+    type(ffh_t), intent(in)     :: h
+    FFH_KEY_ARG, intent(in)     :: key
+    FFH_VAL_TYPE, intent(inout) :: val
+    integer, intent(out)        :: status
 
     status = ffh_get_index(h, key)
     if (status /= ffh_fail) val = h%vals(status)
@@ -86,8 +92,8 @@ contains
   !> Store the value corresponding to a key
   subroutine ffh_store_value(h, key, val, ix)
     type(ffh_t), intent(inout) :: h
-    KEY_TYPE, intent(in)       :: key
-    VAL_TYPE, intent(in)       :: val
+    FFH_KEY_ARG, intent(in)    :: key
+    FFH_VAL_TYPE, intent(in)   :: val
     integer, intent(out)       :: ix !< Index (or ffh_fail)
 
     ix = ffh_store_key(h, key)
@@ -98,7 +104,7 @@ contains
   !> Store key in the table, and return index
   function ffh_store_key(h, key) result(i)
     type(ffh_t), intent(inout) :: h
-    KEY_TYPE, intent(in)       :: key
+    FFH_KEY_ARG, intent(in)    :: key
     integer                    :: i, i_deleted, step, status
 
     i = ffh_fail
@@ -170,7 +176,7 @@ contains
     end if
 
     ! Expand or shrink table
-#ifdef VAL_TYPE
+#ifdef FFH_VAL_TYPE
     allocate(hnew%flags(0:n_new-1), hnew%keys(0:n_new-1), &
          hnew%vals(0:n_new-1), stat=status)
 #else
@@ -198,7 +204,7 @@ contains
              if (bucket_empty(hnew, i)) exit
              i = next_index(hnew, i, step)
           end do
-#ifdef VAL_TYPE
+#ifdef FFH_VAL_TYPE
           hnew%vals(i) = h%vals(j)
 #endif
           hnew%keys(i) = h%keys(j)
@@ -213,7 +219,7 @@ contains
   !> Delete entry for given key
   subroutine ffh_delete_key(h, key, status)
     type(ffh_t), intent(inout) :: h
-    KEY_TYPE, intent(in)       :: key
+    FFH_KEY_ARG, intent(in)    :: key
     integer, intent(out)       :: status
     integer                    :: ix
 
@@ -246,59 +252,62 @@ contains
 
   pure logical function bucket_empty(h, i)
     type(ffh_t), intent(in) :: h
-    integer, intent(in)       :: i
+    integer, intent(in)     :: i
     bucket_empty = (iand(iachar(h%flags(i)), 1) == 0)
   end function bucket_empty
 
   pure logical function bucket_deleted(h, i)
     type(ffh_t), intent(in) :: h
-    integer, intent(in)       :: i
+    integer, intent(in)     :: i
     bucket_deleted = (iand(iachar(h%flags(i)), 2) /= 0)
   end function bucket_deleted
 
   !> Check if index is used and not deleted
   pure logical function ffh_valid_index(h, i)
     type(ffh_t), intent(in) :: h
-    integer, intent(in)       :: i
+    integer, intent(in)     :: i
     ffh_valid_index = (iachar(h%flags(i)) == 1)
   end function ffh_valid_index
 
   pure subroutine set_bucket_filled(h, i)
     type(ffh_t), intent(inout) :: h
-    integer, intent(in)          :: i
+    integer, intent(in)        :: i
     h%flags(i) = achar(1)
   end subroutine set_bucket_filled
 
   pure subroutine set_bucket_deleted(h, i)
     type(ffh_t), intent(inout) :: h
-    integer, intent(in)          :: i
+    integer, intent(in)        :: i
     h%flags(i) = achar(ior(iachar(h%flags(i)), 2))
   end subroutine set_bucket_deleted
 
   !> Compute index for given key
   pure integer function hash_index(h, key) result(i)
     type(ffh_t), intent(in) :: h
-    KEY_TYPE, intent(in)    :: key
+    FFH_KEY_ARG, intent(in) :: key
     i = iand(hash_function(key), h%hash_mask)
   end function hash_index
 
   !> Compute next index inside a loop
   pure integer function next_index(h, i_prev, step)
     type(ffh_t), intent(in) :: h
-    integer, intent(in)       :: i_prev
-    integer, intent(in)       :: step
+    integer, intent(in)     :: i_prev
+    integer, intent(in)     :: step
     next_index = iand(i_prev + step, h%hash_mask)
   end function next_index
 
 #ifndef CUSTOM_HASH_FUNCTION
   pure function hash_function(key) result(hash)
-    KEY_TYPE, intent(in)   :: key
-    integer                :: hash
-    integer, parameter     :: n_bytes = ceiling(storage_size(key)*0.125d0)
-    integer, parameter     :: seed    = 42
-    character(len=n_bytes) :: buf
-
+    FFH_KEY_ARG, intent(in) :: key
+    integer                 :: hash
+    integer, parameter      :: seed = 42
+#ifdef FFH_KEY_IS_STRING
+    call MurmurHash3_x86_32(key, len_trim(key), seed, hash)
+#else
+    integer, parameter      :: n_bytes = ceiling(storage_size(key)*0.125d0)
+    character(len=n_bytes)  :: buf
     call MurmurHash3_x86_32(transfer(key, buf), n_bytes, seed, hash)
+#endif
   end function hash_function
 
   pure integer(int32) function rotl32(x, r)
