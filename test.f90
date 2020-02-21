@@ -20,20 +20,20 @@ program test
   end do
 
   do n = 1, n_max
-     call ffh_store_value(h, keys(n), values(n), i)
+     call h%store_value(keys(n), values(n), i)
   end do
 
   do n = 1, n_max/2
-     call ffh_delete_key(h, keys(n), status)
+     call h%delete_key(keys(n), status)
   end do
 
   do n = 1, n_max
-     call ffh_store_value(h, keys(n), values(n), i)
+     call h%store_value(keys(n), values(n), i)
   end do
 
   do n = 1, n_max
-     i = ffh_get_index(h, keys(n))
-     if (i /= ffh_fail) then
+     i = h%get_index(keys(n))
+     if (i /= -1) then
         print *, "RESULT", n, i, keys(n), h%vals(i), values(n)
      end if
   end do

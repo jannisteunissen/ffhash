@@ -21,12 +21,12 @@ program benchmark_integer
 
   call cpu_time(t_start)
   do n = 1, n_max
-     i = ffh_get_index(h, keys(n))
+     i = h%get_index(keys(n))
 
      if (i /= -1) then
-        call ffh_delete_index(h, i, status)
+        call h%delete_index(i, status)
      else
-        i = ffh_store_key(h, keys(n))
+        i = h%store_key(keys(n))
      end if
   end do
   call cpu_time(t_end)
