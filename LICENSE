@@ -1,5 +1,7 @@
 Hash table implementation in Fortran by Jannis Teunissen. The implementation is
-based on khash, whose license is copied below.
+heavily inspired by khash, whose license is copied below. The included Murmur3
+hash function is in the public domain, with credits to the C port by Peter Scott
+(see https://github.com/PeterScott/murmur3).
 
 The MIT License
 

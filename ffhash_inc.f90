@@ -6,19 +6,30 @@
   ! #include "ffhash_inc.f90"
   ! end module m_ffhash
 
+  ! Special handling of strings (which can be shortened)
 #ifdef FFH_KEY_IS_STRING
 #define FFH_KEY_ARG character(len=*)
 #else
 #define FFH_KEY_ARG FFH_KEY_TYPE
 #endif
 
+#ifdef FFH_VAL_TYPE
+#ifdef FFH_VAL_IS_STRING
+#define FFH_VAL_ARG character(len=*)
+#else
+#define FFH_VAL_ARG FFH_VAL_TYPE
+#endif
+#endif
+
+  private
+
   !> Type storing the hash table
-  type ffh_t
+  type, public :: ffh_t
      !> Number of buckets in hash table
      integer                    :: n_buckets       = 0
      !> Number of keys stored in hash table
      integer                    :: n_keys_stored   = 0
-     !> Number of keys stored plus deleted keys
+     !> Number of keys stored or deleted
      integer                    :: n_occupied      = 0
      !> Maximum number of occupied buckets
      integer                    :: n_occupied_max  = 0
@@ -36,25 +47,32 @@
      FFH_VAL_TYPE, allocatable  :: vals(:)
 #endif
    contains
+     !> Get index of a key
      procedure, non_overridable :: get_index
+     !> Check whether a valid key is present at index
      procedure, non_overridable :: valid_index
+     !> Store a new key
      procedure, non_overridable :: store_key
-     procedure, non_overridable :: delete_key
-     procedure, non_overridable :: delete_index
+     !> Delete a key
+     procedure, non_overridable :: delete_key, udelete_key
+     !> Delete key at an index
+     procedure, non_overridable :: delete_index, udelete_index
+     !> Resize the hash table
      procedure, non_overridable :: resize
 #ifdef FFH_VAL_TYPE
-     procedure, non_overridable :: store_value
-     procedure, non_overridable :: get_value
+     !> Store a key, value pair
+     procedure, non_overridable :: store_value, ustore_value
+     !> Get the value for a key
+     procedure, non_overridable :: get_value, uget_value, fget_value
 #endif
+     !> Hash function
      procedure, non_overridable, nopass :: hash_function
   end type ffh_t
-
-  public :: ffh_t
 
 contains
 
   !> Get index corresponding to a key
-  function get_index(h, key) result(ix)
+  elemental pure function get_index(h, key) result(ix)
     class(ffh_t), intent(in) :: h
     FFH_KEY_ARG, intent(in)  :: key
     integer                  :: ix, i, step
@@ -63,8 +81,8 @@ contains
 
     do step = 1, h%n_buckets
        ! Exit when an empty bucket or the key is found
-       if (bucket_empty(h, i) .or. &
-            (.not. bucket_deleted(h, i) .and. h%keys(i) == key)) exit
+       if (bucket_empty(h, i) .or. (.not. bucket_deleted(h, i) &
+            .and. keys_equal(h%keys(i), key))) exit
        i = next_index(h, i, step)
     end do
 
@@ -76,33 +94,63 @@ contains
 
 #ifdef FFH_VAL_TYPE
   !> Get the value corresponding to a key
-  subroutine get_value(h, key, val, status)
-    class(ffh_t), intent(in)    :: h
-    FFH_KEY_ARG, intent(in)     :: key
-    FFH_VAL_TYPE, intent(inout) :: val
-    integer, intent(out)        :: status
+  pure subroutine get_value(h, key, val, status)
+    class(ffh_t), intent(in)   :: h
+    FFH_KEY_ARG, intent(in)    :: key
+    FFH_VAL_ARG, intent(inout) :: val
+    integer, intent(out)       :: status
 
     status = h%get_index(key)
     if (status /= -1) val = h%vals(status)
   end subroutine get_value
 
+  !> Get the value corresponding to a key
+  pure subroutine uget_value(h, key, val)
+    class(ffh_t), intent(in)   :: h
+    FFH_KEY_ARG, intent(in)    :: key
+    FFH_VAL_ARG, intent(inout) :: val
+    integer                    :: status
+    call get_value(h, key, val, status)
+    if (status == -1) error stop "Cannot get value"
+  end subroutine uget_value
+
+  !> Get the value corresponding to a key
+  elemental pure function fget_value(h, key) result(val)
+    class(ffh_t), intent(in) :: h
+    FFH_KEY_ARG, intent(in)  :: key
+    FFH_VAL_TYPE             :: val
+    integer                  :: status
+    call get_value(h, key, val, status)
+    if (status == -1) error stop "Cannot get value"
+  end function fget_value
+
   !> Store the value corresponding to a key
-  subroutine store_value(h, key, val, ix)
+  pure subroutine store_value(h, key, val, ix)
     class(ffh_t), intent(inout) :: h
     FFH_KEY_ARG, intent(in)     :: key
-    FFH_VAL_TYPE, intent(in)    :: val
+    FFH_VAL_ARG, intent(in)     :: val
     integer, intent(out)        :: ix !< Index (or -1)
 
-    ix = h%store_key(key)
+    call h%store_key(key, ix)
     if (ix /= -1) h%vals(ix) = val
   end subroutine store_value
+
+  pure subroutine ustore_value(h, key, val)
+    class(ffh_t), intent(inout) :: h
+    FFH_KEY_ARG, intent(in)     :: key
+    FFH_VAL_ARG, intent(in)     :: val
+    integer                     :: ix
+    call store_value(h, key, val, ix)
+    if (ix == -1) error stop "Cannot store value"
+  end subroutine ustore_value
 #endif
 
   !> Store key in the table, and return index
-  function store_key(h, key) result(i)
+  pure subroutine store_key(h, key, i)
     class(ffh_t), intent(inout) :: h
     FFH_KEY_ARG, intent(in)     :: key
-    integer                     :: i, i_deleted, step, status
+    integer, intent(out)        :: i
+    integer                     :: i_deleted, step, status
 
     i = -1
 
@@ -126,14 +174,15 @@ contains
        ! over deleted slots ensures that a key is not added twice, in case it is
        ! not at its 'first' hash index, and some keys in between have been deleted.
        do step = 1, h%n_buckets
-          if (bucket_empty(h, i) .or. &
-               (.not. bucket_deleted(h, i) .and. h%keys(i) == key)) exit
+          if (bucket_empty(h, i) .or. (.not. bucket_deleted(h, i) &
+               .and. keys_equal(h%keys(i), key))) exit
           if (bucket_deleted(h, i)) i_deleted = i
           i = next_index(h, i, step)
        end do
 
        if (bucket_empty(h, i) .and. i_deleted /= -1) then
-          ! Use deleted location
+          ! Use deleted location. By taking the last one, the deleted sequence
+          ! is shrunk from the end.
           i = i_deleted
        end if
     end if
@@ -150,10 +199,10 @@ contains
     end if
     ! If key is already present, do nothing
 
-  end function store_key
+  end subroutine store_key
 
   !> Resize a hash table
-  subroutine resize(h, new_n_buckets, status)
+  pure subroutine resize(h, new_n_buckets, status)
     class(ffh_t), intent(inout) :: h
     integer, intent(in)         :: new_n_buckets
     integer, intent(out)        :: status
@@ -226,7 +275,7 @@ contains
   end subroutine resize
 
   !> Delete entry for given key
-  subroutine delete_key(h, key, status)
+  pure subroutine delete_key(h, key, status)
     class(ffh_t), intent(inout) :: h
     FFH_KEY_ARG, intent(in)     :: key
     integer, intent(out)        :: status
@@ -242,8 +291,17 @@ contains
     end if
   end subroutine delete_key
 
+  !> Delete entry for given key
+  pure subroutine udelete_key(h, key)
+    class(ffh_t), intent(inout) :: h
+    FFH_KEY_ARG, intent(in)     :: key
+    integer                     :: status
+    call h%delete_key(key, status)
+    if (status == -1) error stop "Cannot delete key"
+  end subroutine udelete_key
+
   !> Delete entry at index
-  subroutine delete_index(h, ix, status)
+  pure subroutine delete_index(h, ix, status)
     class(ffh_t), intent(inout) :: h
     integer, intent(in)         :: ix
     integer, intent(out)        :: status
@@ -258,6 +316,15 @@ contains
        status = 0
     end if
   end subroutine delete_index
+
+  !> Delete entry at index
+  pure subroutine udelete_index(h, ix)
+    class(ffh_t), intent(inout) :: h
+    integer, intent(in)         :: ix
+    integer                     :: status
+    call h%delete_index(ix, status)
+    if (status == -1) error stop "Cannot delete key"
+  end subroutine udelete_index
 
   pure logical function bucket_empty(h, i)
     type(ffh_t), intent(in) :: h
@@ -304,6 +371,13 @@ contains
     integer, intent(in)     :: step
     next_index = iand(i_prev + step, h%hash_mask)
   end function next_index
+
+#ifndef FFH_CUSTOM_KEYS_EQUAL
+  pure logical function keys_equal(a, b)
+    FFH_KEY_ARG, intent(in) :: a, b
+    keys_equal = (a == b)
+  end function keys_equal
+#endif
 
 #ifndef FFH_CUSTOM_HASH_FUNCTION
   pure function hash_function(key) result(hash)
@@ -396,3 +470,13 @@ contains
     hash = h1
   end subroutine MurmurHash3_x86_32
 #endif
+
+  ! So that this file can be included multiple times
+#undef FFH_KEY_TYPE
+#undef FFH_KEY_ARG
+#undef FFH_KEY_IS_STRING
+#undef FFH_VAL_TYPE
+#undef FFH_VAL_ARG
+#undef FFH_VAL_IS_STRING
+#undef FFH_CUSTOM_HASH_FUNCTION
+#undef FFH_CUSTOM_KEYS_EQUAL

@@ -3,13 +3,13 @@ module m_ffhash
 #include "ffhash_inc.f90"
 end module m_ffhash
 
-program benchmark_integer
+program test
   use iso_fortran_env, dp => real64
   use m_ffhash
 
   implicit none
 
-  type(ffh_t)        :: h
+  type(ffh_t)          :: h
   integer, parameter   :: n_max = 5*1000*1000
   integer              :: n, i, status
   integer              :: keys(n_max)
@@ -26,13 +26,16 @@ program benchmark_integer
      if (i /= -1) then
         call h%delete_index(i, status)
      else
-        i = h%store_key(keys(n))
+        call h%store_key(keys(n), i)
      end if
   end do
   call cpu_time(t_end)
 
-  print *, "Elapsed time", t_end - t_start
-  print *, "Size/n_occupied/n_buckets", h%n_keys_stored, h%n_occupied, h%n_buckets
+  write(*, "(A,E12.4)") "Elapsed time (s) ", t_end - t_start
+  write(*, "(A,E12.4)") "Entries/s        ", n_max/(t_end - t_start)
+  write(*, "(A,I12)")   "n_keys_stored    ", h%n_keys_stored
+  write(*, "(A,I12)")   "n_occupied       ", h%n_occupied
+  write(*, "(A,I12)")   "n_buckets        ", h%n_buckets
 
   ! Count number of keys that occur an odd number of times
   allocate(key_counts(minval(keys):maxval(keys)))
@@ -45,7 +48,7 @@ program benchmark_integer
   if (n /= h%n_keys_stored) then
      error stop "Incorrect h%size"
   else
-     print *, "Test passed (h%size is correct)"
+     print *, "PASSED"
   end if
 
-end program benchmark_integer
+end program test
