@@ -54,16 +54,26 @@
      !> Store a new key
      procedure, non_overridable :: store_key
      !> Delete a key
-     procedure, non_overridable :: delete_key, udelete_key
+     procedure, non_overridable :: delete_key
+     !> Delete a key (can perform error stop)
+     procedure, non_overridable :: udelete_key
      !> Delete key at an index
-     procedure, non_overridable :: delete_index, udelete_index
+     procedure, non_overridable :: delete_index
+     !> Delete key at an index (can perform error stop)
+     procedure, non_overridable :: udelete_index
      !> Resize the hash table
      procedure, non_overridable :: resize
 #ifdef FFH_VAL_TYPE
-     !> Store a key, value pair
-     procedure, non_overridable :: store_value, ustore_value
-     !> Get the value for a key
-     procedure, non_overridable :: get_value, uget_value, fget_value
+     !> Store a key-value pair
+     procedure, non_overridable :: store_value
+     !> Store a key-value pair (can perform error stop)
+     procedure, non_overridable :: ustore_value
+     !> Get value for a key
+     procedure, non_overridable :: get_value
+     !> Get value for a key (can perform error stop)
+     procedure, non_overridable :: uget_value
+     !> Function to get value for a key (can perform error stop)
+     procedure, non_overridable :: fget_value
 #endif
      !> Hash function
      procedure, non_overridable, nopass :: hash_function
@@ -105,7 +115,7 @@ contains
   end subroutine get_value
 
   !> Get the value corresponding to a key
-  pure subroutine uget_value(h, key, val)
+  subroutine uget_value(h, key, val)
     class(ffh_t), intent(in)   :: h
     FFH_KEY_ARG, intent(in)    :: key
     FFH_VAL_ARG, intent(inout) :: val
@@ -115,7 +125,7 @@ contains
   end subroutine uget_value
 
   !> Get the value corresponding to a key
-  elemental pure function fget_value(h, key) result(val)
+  function fget_value(h, key) result(val)
     class(ffh_t), intent(in) :: h
     FFH_KEY_ARG, intent(in)  :: key
     FFH_VAL_TYPE             :: val
@@ -135,7 +145,7 @@ contains
     if (ix /= -1) h%vals(ix) = val
   end subroutine store_value
 
-  pure subroutine ustore_value(h, key, val)
+  subroutine ustore_value(h, key, val)
     class(ffh_t), intent(inout) :: h
     FFH_KEY_ARG, intent(in)     :: key
     FFH_VAL_ARG, intent(in)     :: val
@@ -292,7 +302,7 @@ contains
   end subroutine delete_key
 
   !> Delete entry for given key
-  pure subroutine udelete_key(h, key)
+  subroutine udelete_key(h, key)
     class(ffh_t), intent(inout) :: h
     FFH_KEY_ARG, intent(in)     :: key
     integer                     :: status
@@ -318,7 +328,7 @@ contains
   end subroutine delete_index
 
   !> Delete entry at index
-  pure subroutine udelete_index(h, ix)
+  subroutine udelete_index(h, ix)
     class(ffh_t), intent(inout) :: h
     integer, intent(in)         :: ix
     integer                     :: status

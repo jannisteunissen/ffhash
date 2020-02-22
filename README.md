@@ -9,6 +9,13 @@ Properties of the hash table:
 * [Murmur3_x86_32](http://code.google.com/p/smhasher/wiki/MurmurHash3) as default hash function, see also [murmur3-fortran](https://github.com/jannisteunissen/murmur3-fortran)
 * Generic: the keys and values can be of any type.
 
+Requirements
+==
+
+* Fortran 2008 compatible compiler, such as `gfortran` or `ifort`
+
+Preprocessing should be enabled (typically with `-cpp`). With older `gfortran` versions (version 7 or older) there may be warnings.
+
 Usage
 ==
 
@@ -53,26 +60,22 @@ value = h%fget_value(key)
 
 Below is the full list of included methods. The variants starting with a `u` call `error stop` in case of errors. The variants without a `u` have an additional `status` argument, which is `-1` in case of errors.
 
-```Fortran
-!> Get index of a key
-procedure, non_overridable :: get_index
-!> Check whether a valid key is present at index
-procedure, non_overridable :: valid_index
-!> Store a new key
-procedure, non_overridable :: store_key
-!> Delete a key
-procedure, non_overridable :: delete_key, udelete_key
-!> Delete key at an index
-procedure, non_overridable :: delete_index, udelete_index
-!> Resize the hash table
-procedure, non_overridable :: resize
-!> Store a key, value pair
-procedure, non_overridable :: store_value, ustore_value
-!> Get the value for a key
-procedure, non_overridable :: get_value, uget_value, fget_value
-!> Hash function
-procedure, non_overridable, nopass :: hash_function
-```
+| name | description |
+|---|---|
+| get_index | Get index of a key |
+| valid_index | Check whether a valid key is present at index |
+| store_key | Store a new key |
+| delete_key | Delete a key |
+| udelete_key | Delete a key (can perform error stop) |
+| delete_index | Delete key at an index |
+| udelete_index | Delete key at an index (can perform error stop) |
+| resize | Resize the hash table |
+| store_value | Store a key-value pair |
+| ustore_value | Store a key-value pair (can perform error stop) |
+| get_value | Get value for a key |
+| uget_value | Get value for a key (can perform error stop) |
+| fget_value | Function to get value for a key (can perform error stop) |
+| hash_function | Hash function |
 
 List of examples
 ==
