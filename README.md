@@ -16,6 +16,14 @@ Requirements
 
 Preprocessing should be enabled (typically with `-cpp`). With older `gfortran` versions (version 7 or older) there may be warnings.
 
+List of examples
+==
+
+* [Using custom types](example_custom_types.f90)
+* [Using a custom hash function](example_custom_hash_function.f90) (also shows how to use strings as keys)
+* [Using multiple hash tables](example_multiple_tables.f90) (also shows how to use strings as keys/values)
+* [Simple benchmark](example_benchmark.f90)
+
 Usage
 ==
 
@@ -56,6 +64,11 @@ if (i /= -1) h%vals(i) = value
 
 ! This is also possible
 value = h%fget_value(key)
+
+! The index range is from 0 to n_buckets-1
+do i = 0, h%n_buckets-1
+  if (h%valid_index(i)) ...
+end do
 ```
 
 Below is the full list of included methods. The variants starting with a `u` call `error stop` in case of errors. The variants without a `u` have an additional `status` argument, which is `-1` in case of errors.
@@ -77,11 +90,3 @@ Below is the full list of included methods. The variants starting with a `u` cal
 | `fget_value` | Function to get value for a key (can perform error stop) |
 | `fget_value_or` | Function to get value for a key or a dummy if not found |
 | `hash_function` | Hash function |
-
-List of examples
-==
-
-* [Using custom types](example_custom_types.f90)
-* [Using a custom hash function](example_custom_hash_function.f90) (also shows how to use strings as keys)
-* [Using multiple hash tables](example_multiple_tables.f90) (also shows how to use strings as keys/values)
-* [Simple benchmark](example_benchmark.f90)
