@@ -89,19 +89,22 @@ contains
     FFH_KEY_ARG, intent(in)  :: key
     integer                  :: ix, i, step
 
-    i = hash_index(h, key)
+    ix = -1
+    i  = hash_index(h, key)
 
     do step = 1, h%n_buckets
        ! Exit when an empty bucket or the key is found
-       if (bucket_empty(h, i) .or. (.not. bucket_deleted(h, i) &
-            .and. keys_equal(h%keys(i), key))) exit
-       i = next_index(h, i, step)
+       if (bucket_empty(h, i)) then
+          ! Key not found
+          exit
+       else if (h%valid_index(i) .and. keys_equal(h%keys(i), key)) then
+          ! Key found
+          ix = i
+          exit
+       else
+          i = next_index(h, i, step)
+       end if
     end do
-
-    ix = -1
-    if (step == h%n_buckets + 1) return ! Not found in loop
-    if (.not. h%valid_index(i)) return  ! Exited, but key not found
-    ix = i
   end function get_index
 
 #ifdef FFH_VAL_TYPE
