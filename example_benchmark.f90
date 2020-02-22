@@ -46,7 +46,7 @@ program test
   n = sum(iand(key_counts, 1))
 
   if (n /= h%n_keys_stored) then
-     error stop "Incorrect h%size"
+     error stop "FAILED"
   else
      print *, "PASSED"
   end if

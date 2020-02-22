@@ -74,6 +74,8 @@
      procedure, non_overridable :: uget_value
      !> Function to get value for a key (can perform error stop)
      procedure, non_overridable :: fget_value
+     !> Function to get value for a key or a dummy if not found
+     procedure, non_overridable :: fget_value_or
 #endif
      !> Hash function
      procedure, non_overridable, nopass :: hash_function
@@ -133,6 +135,17 @@ contains
     call get_value(h, key, val, status)
     if (status == -1) error stop "Cannot get value"
   end function fget_value
+
+  !> Get the value corresponding to a key
+  elemental pure function fget_value_or(h, key, not_found) result(val)
+    class(ffh_t), intent(in) :: h
+    FFH_KEY_ARG, intent(in)  :: key
+    FFH_VAL_ARG, intent(in)  :: not_found
+    FFH_VAL_TYPE             :: val
+    integer                  :: status
+    call get_value(h, key, val, status)
+    if (status == -1) val = not_found
+  end function fget_value_or
 
   !> Store the value corresponding to a key
   pure subroutine store_value(h, key, val, ix)

@@ -62,20 +62,21 @@ Below is the full list of included methods. The variants starting with a `u` cal
 
 | name | description |
 |---|---|
-| get_index | Get index of a key |
-| valid_index | Check whether a valid key is present at index |
-| store_key | Store a new key |
-| delete_key | Delete a key |
-| udelete_key | Delete a key (can perform error stop) |
-| delete_index | Delete key at an index |
-| udelete_index | Delete key at an index (can perform error stop) |
-| resize | Resize the hash table |
-| store_value | Store a key-value pair |
-| ustore_value | Store a key-value pair (can perform error stop) |
-| get_value | Get value for a key |
-| uget_value | Get value for a key (can perform error stop) |
-| fget_value | Function to get value for a key (can perform error stop) |
-| hash_function | Hash function |
+| `get_index` | Get index of a key |
+| `valid_index` | Check whether a valid key is present at index |
+| `store_key` | Store a new key |
+| `delete_key` | Delete a key |
+| `udelete_key` | Delete a key (can perform error stop) |
+| `delete_index` | Delete key at an index |
+| `udelete_index` | Delete key at an index (can perform error stop) |
+| `resize` | Resize the hash table |
+| `store_value` | Store a key-value pair |
+| `ustore_value` | Store a key-value pair (can perform error stop) |
+| `get_value` | Get value for a key |
+| `uget_value` | Get value for a key (can perform error stop) |
+| `fget_value` | Function to get value for a key (can perform error stop) |
+| `fget_value_or` | Function to get value for a key or a dummy if not found |
+| `hash_function` | Hash function |
 
 List of examples
 ==
