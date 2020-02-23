@@ -78,16 +78,12 @@ Below is the full list of included methods. The variants starting with a `u` cal
 | `get_index` | Get index of a key |
 | `valid_index` | Check whether a valid key is present at index |
 | `store_key` | Store a new key |
-| `delete_key` | Delete a key |
-| `udelete_key` | Delete a key (can perform error stop) |
-| `delete_index` | Delete key at an index |
-| `udelete_index` | Delete key at an index (can perform error stop) |
-| `resize` | Resize the hash table |
-| `reset` | Reset the hash table to initial empty state |
-| `store_value` | Store a key-value pair |
-| `ustore_value` | Store a key-value pair (can perform error stop) |
-| `get_value` | Get value for a key |
-| `uget_value` | Get value for a key (can perform error stop) |
+| `delete_key`, `udelete_key` | Delete a key |
+| `delete_index`, `udelete_index` | Delete key at an index |
+| `store_value`, `ustore_value` | Store a key-value pair |
+| `get_value`, `uget_value` | Get value for a key |
 | `fget_value` | Function to get value for a key (can perform error stop) |
 | `fget_value_or` | Function to get value for a key or a dummy if not found |
+| `resize` | Manually resize the hash table (happens automatically) |
+| `reset` | Reset the hash table to initial empty state |
 | `hash_function` | Hash function |
