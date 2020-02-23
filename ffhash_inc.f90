@@ -63,6 +63,8 @@
      procedure, non_overridable :: udelete_index
      !> Resize the hash table
      procedure, non_overridable :: resize
+     !> Reset the hash table to initial empty state
+     procedure, non_overridable :: reset
 #ifdef FFH_VAL_TYPE
      !> Store a key-value pair
      procedure, non_overridable :: store_value
@@ -351,6 +353,26 @@ contains
     call h%delete_index(ix, status)
     if (status == -1) error stop "Cannot delete key"
   end subroutine udelete_index
+
+  !> Reset the hash table to initial empty state
+  subroutine reset(h)
+    class(ffh_t), intent(inout) :: h
+
+    h%n_buckets       = 0
+    h%n_keys_stored   = 0
+    h%n_occupied      = 0
+    h%n_occupied_max  = 0
+    h%hash_mask       = 0
+    h%max_load_factor = 0.7d0
+
+    if (allocated(h%flags)) then
+#ifdef FFH_VAL_TYPE
+       deallocate(h%flags, h%keys, h%vals)
+#else
+       deallocate(h%flags, h%keys)
+#endif
+    end if
+  end subroutine reset
 
   pure logical function bucket_empty(h, i)
     type(ffh_t), intent(in) :: h

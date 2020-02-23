@@ -83,6 +83,7 @@ Below is the full list of included methods. The variants starting with a `u` cal
 | `delete_index` | Delete key at an index |
 | `udelete_index` | Delete key at an index (can perform error stop) |
 | `resize` | Resize the hash table |
+| `reset` | Reset the hash table to initial empty state |
 | `store_value` | Store a key-value pair |
 | `ustore_value` | Store a key-value pair (can perform error stop) |
 | `get_value` | Get value for a key |
