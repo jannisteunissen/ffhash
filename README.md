@@ -87,3 +87,10 @@ Below is the full list of included methods. The variants starting with a `u` cal
 | `resize` | Manually resize the hash table (happens automatically) |
 | `reset` | Reset the hash table to initial empty state |
 | `hash_function` | Hash function |
+
+Links
+==
+
+* [murmur3-fortran](https://github.com/jannisteunissen/murmur3-fortran) Murmur3
+  hash function implemented in Fortran
+* [Hash tables on Fortran Wiki](http://fortranwiki.org/fortran/show/Hash+tables)
