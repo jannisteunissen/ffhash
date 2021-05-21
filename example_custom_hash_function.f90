@@ -35,8 +35,6 @@ program test
   call h%uget_value("month", month)
   call h%uget_value("year", year)
 
-  call h%uget_value("yeararst", year)
-
   if (all([day, month, year] == [20, 2, 2020])) then
      print *, [day, month, year]
      print *, h%get_index(["day  ", "month", "year "])
