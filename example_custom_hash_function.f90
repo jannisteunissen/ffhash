@@ -1,4 +1,5 @@
 module m_ffhash
+  implicit none
 #define FFH_KEY_TYPE character(len=20)
 #define FFH_KEY_IS_STRING
 #define FFH_VAL_TYPE integer
@@ -33,6 +34,8 @@ program test
   call h%uget_value("day", day)
   call h%uget_value("month", month)
   call h%uget_value("year", year)
+
+  call h%uget_value("yeararst", year)
 
   if (all([day, month, year] == [20, 2, 2020])) then
      print *, [day, month, year]

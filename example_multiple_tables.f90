@@ -1,4 +1,5 @@
 module m_hash_a
+  implicit none
 #define FFH_KEY_TYPE integer
 #define FFH_VAL_TYPE character(len=15)
 #define FFH_VAL_IS_STRING
@@ -6,6 +7,7 @@ module m_hash_a
 end module m_hash_a
 
 module m_hash_b
+  implicit none
 #define FFH_KEY_TYPE character(len=20)
 #define FFH_KEY_IS_STRING
 #define FFH_VAL_TYPE integer

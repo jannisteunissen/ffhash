@@ -1,4 +1,5 @@
 module m_ffhash
+  implicit none
 #define FFH_KEY_TYPE integer
 #include "ffhash_inc.f90"
 end module m_ffhash

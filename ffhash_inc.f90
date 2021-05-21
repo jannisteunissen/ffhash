@@ -1,6 +1,7 @@
   ! This file should be included in a module ... end module block
   ! For example:
   ! module m_ffhash
+  ! implicit none
   ! #define FFH_KEY_TYPE integer
   ! #define FFH_VAL_TYPE integer (optional)
   ! #include "ffhash_inc.f90"
