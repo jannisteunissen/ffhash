@@ -100,13 +100,14 @@ contains
        if (bucket_empty(h, i)) then
           ! Key not found
           exit
-       else if (h%valid_index(i) .and. keys_equal(h%keys(i), key)) then
-          ! Key found
-          ix = i
-          exit
-       else
-          i = next_index(h, i, step)
+       else if (h%valid_index(i)) then
+          if (keys_equal(h%keys(i), key)) then
+             ! Key found
+             ix = i
+             exit
+          end if
        end if
+       i = next_index(h, i, step)
     end do
   end function get_index
 
@@ -203,8 +204,9 @@ contains
        ! over deleted slots ensures that a key is not added twice, in case it is
        ! not at its 'first' hash index, and some keys in between have been deleted.
        do step = 1, h%n_buckets
-          if (bucket_empty(h, i) .or. (.not. bucket_deleted(h, i) &
-               .and. keys_equal(h%keys(i), key))) exit
+          if (bucket_empty(h, i)) exit
+          if (.not. bucket_deleted(h, i) &
+               .and. keys_equal(h%keys(i), key)) exit
           if (bucket_deleted(h, i)) i_deleted = i
           i = next_index(h, i, step)
        end do
