@@ -28,4 +28,6 @@ program test
   if (hb%fget_value("first") /= 12345) error stop "FAILED"
 
   print *, "PASSED"
+  call ha%reset()
+  call hb%reset()
 end program test

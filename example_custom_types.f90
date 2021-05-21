@@ -37,4 +37,6 @@ program test
   else
      error stop "FAILED"
   end if
+
+  call h%reset()
 end program test

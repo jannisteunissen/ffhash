@@ -42,4 +42,5 @@ program test
      error stop "FAILED"
   end if
 
+  call h%reset()
 end program test

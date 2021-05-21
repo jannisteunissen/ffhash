@@ -51,4 +51,8 @@ program test
      print *, "PASSED"
   end if
 
+  ! Clean up allocated storage
+  call h%reset()
+  deallocate(key_counts)
+
 end program test
