@@ -2,3 +2,7 @@
 /example_custom_hash_function
 /example_custom_types
 /example_multiple_tables
+/m_example.mod
+/m_ffhash.mod
+/m_hash_a.mod
+/m_hash_b.mod
