@@ -10,12 +10,15 @@ program test
 
   implicit none
 
-  type(ffh_t)          :: h
-  integer, parameter   :: n_max = 5*1000*1000
-  integer              :: n, i, status
-  integer              :: keys(n_max)
-  integer, allocatable :: key_counts(:)
-  real(dp)             :: r_uniform(n_max), t_start, t_end
+  type(ffh_t)           :: h
+  integer, parameter    :: n_max = 5*1000*1000
+  integer               :: n, i, status
+  integer, allocatable  :: keys(:)
+  integer, allocatable  :: key_counts(:)
+  real(dp)              :: t_start, t_end
+  real(dp), allocatable :: r_uniform(:)
+
+  allocate(keys(n_max), r_uniform(n_max))
 
   call random_number(r_uniform)
   keys = nint(r_uniform * n_max * 0.25_dp)
