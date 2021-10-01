@@ -359,22 +359,7 @@ contains
 
   !> Reset the hash table to initial empty state
   subroutine reset(h)
-    class(ffh_t), intent(inout) :: h
-
-    h%n_buckets       = 0
-    h%n_keys_stored   = 0
-    h%n_occupied      = 0
-    h%n_occupied_max  = 0
-    h%hash_mask       = 0
-    h%max_load_factor = 0.7d0
-
-    if (allocated(h%flags)) then
-#ifdef FFH_VAL_TYPE
-       deallocate(h%flags, h%keys, h%vals)
-#else
-       deallocate(h%flags, h%keys)
-#endif
-    end if
+    class(ffh_t), intent(out) :: h
   end subroutine reset
 
   pure logical function bucket_empty(h, i)
