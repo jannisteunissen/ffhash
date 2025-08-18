@@ -205,12 +205,20 @@ contains
        ! not at its 'first' hash index, and some keys in between have been deleted.
        do step = 1, h%n_buckets
           if (bucket_empty(h, i)) exit
-          if (.not. bucket_deleted(h, i) &
-               .and. keys_equal(h%keys(i), key)) exit
+          !modByRT - begin
+          !If key is already present, set i = -2
+          if (.not. bucket_deleted(h, i).and.&
+             keys_equal(h%keys(i), key)) then
+               i = -2
+               return
+          end if
+          !if (.not. bucket_deleted(h, i) &
+          !     .and. keys_equal(h%keys(i), key)) exit
+          !modByRT - end
           if (bucket_deleted(h, i)) i_deleted = i
           i = next_index(h, i, step)
        end do
-
+       
        if (bucket_empty(h, i) .and. i_deleted /= -1) then
           ! Use deleted location. By taking the last one, the deleted sequence
           ! is shrunk from the end.
@@ -228,7 +236,6 @@ contains
        h%keys(i)       = key
        call set_bucket_filled(h, i)
     end if
-    ! If key is already present, do nothing
 
   end subroutine store_key
 
