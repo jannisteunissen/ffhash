@@ -17,9 +17,11 @@ end module m_hash_b
 program test
   use m_hash_a, ffha_t => ffh_t
   use m_hash_b, ffhb_t => ffh_t
+  implicit none
 
   type(ffha_t) :: ha
   type(ffhb_t) :: hb
+  integer      :: i
 
   call ha%ustore_value(1, "hello world")
   print *, ha%fget_value(1)
@@ -28,6 +30,10 @@ program test
   call hb%ustore_value("first", 12345)
   print *, hb%fget_value("first")
   if (hb%fget_value("first") /= 12345) error stop "FAILED"
+
+  ! Try to store the same key twice
+  call hb%store_key("first", i)
+  if (i /= -2) error stop "Expected -2 for duplicate key"
 
   print *, "PASSED"
   call ha%reset()
