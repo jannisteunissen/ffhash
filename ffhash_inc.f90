@@ -86,7 +86,7 @@
 
 contains
 
-  !> Get index corresponding to a key
+  !> Get index corresponding to a key. If the key is not found, return -1.
   elemental pure function get_index(h, key) result(ix)
     class(ffh_t), intent(in) :: h
     FFH_KEY_ARG, intent(in)  :: key
@@ -120,7 +120,7 @@ contains
     integer, intent(out)       :: status
 
     status = h%get_index(key)
-    if (status /= -1) val = h%vals(status)
+    if (status >= 0) val = h%vals(status)
   end subroutine get_value
 
   !> Get the value corresponding to a key
@@ -130,7 +130,7 @@ contains
     FFH_VAL_ARG, intent(inout) :: val
     integer                    :: status
     call get_value(h, key, val, status)
-    if (status == -1) error stop "Cannot get value"
+    if (status < 0) error stop "Cannot get value"
   end subroutine uget_value
 
   !> Get the value corresponding to a key
@@ -140,7 +140,7 @@ contains
     FFH_VAL_TYPE             :: val
     integer                  :: status
     call get_value(h, key, val, status)
-    if (status == -1) error stop "Cannot get value"
+    if (status < 0) error stop "Cannot get value"
   end function fget_value
 
   !> Get the value corresponding to a key
@@ -151,7 +151,7 @@ contains
     FFH_VAL_TYPE             :: val
     integer                  :: status
     call get_value(h, key, val, status)
-    if (status == -1) val = not_found
+    if (status < 0) val = not_found
   end function fget_value_or
 
   !> Store the value corresponding to a key
@@ -162,7 +162,7 @@ contains
     integer, intent(out)        :: ix !< Index (or -1)
 
     call h%store_key(key, ix)
-    if (ix /= -1) h%vals(ix) = val
+    if (ix >= 0) h%vals(ix) = val
   end subroutine store_value
 
   subroutine ustore_value(h, key, val)
@@ -171,11 +171,13 @@ contains
     FFH_VAL_ARG, intent(in)     :: val
     integer                     :: ix
     call store_value(h, key, val, ix)
-    if (ix == -1) error stop "Cannot store value"
+    if (ix < 0) error stop "Cannot store value"
   end subroutine ustore_value
 #endif
 
-  !> Store key in the table, and return index
+  !> Store key in the table, and return index. A negative index is returned in
+  !> case of an error. If resizing fails, -1 is returned. If the key was
+  !> already present, the returned index is set to -2.
   pure subroutine store_key(h, key, i)
     class(ffh_t), intent(inout) :: h
     FFH_KEY_ARG, intent(in)     :: key
@@ -205,20 +207,18 @@ contains
        ! not at its 'first' hash index, and some keys in between have been deleted.
        do step = 1, h%n_buckets
           if (bucket_empty(h, i)) exit
-          !modByRT - begin
-          !If key is already present, set i = -2
-          if (.not. bucket_deleted(h, i).and.&
-             keys_equal(h%keys(i), key)) then
+
+          ! If key is already present, set i = -2
+          if (.not. bucket_deleted(h, i) .and. &
+               keys_equal(h%keys(i), key)) then
                i = -2
                return
           end if
-          !if (.not. bucket_deleted(h, i) &
-          !     .and. keys_equal(h%keys(i), key)) exit
-          !modByRT - end
+
           if (bucket_deleted(h, i)) i_deleted = i
           i = next_index(h, i, step)
        end do
-       
+
        if (bucket_empty(h, i) .and. i_deleted /= -1) then
           ! Use deleted location. By taking the last one, the deleted sequence
           ! is shrunk from the end.
@@ -320,7 +320,7 @@ contains
     integer                     :: ix
 
     ix = h%get_index(key)
-    if (ix /= -1) then
+    if (ix >= 0) then
        call set_bucket_deleted(h, ix)
        h%n_keys_stored = h%n_keys_stored - 1
        status = 0
@@ -335,10 +335,10 @@ contains
     FFH_KEY_ARG, intent(in)     :: key
     integer                     :: status
     call h%delete_key(key, status)
-    if (status == -1) error stop "Cannot delete key"
+    if (status < 0) error stop "Cannot delete key"
   end subroutine udelete_key
 
-  !> Delete entry at index
+  !> Delete entry at index. A negative status indicates an error.
   pure subroutine delete_index(h, ix, status)
     class(ffh_t), intent(inout) :: h
     integer, intent(in)         :: ix
@@ -361,7 +361,7 @@ contains
     integer, intent(in)         :: ix
     integer                     :: status
     call h%delete_index(ix, status)
-    if (status == -1) error stop "Cannot delete key"
+    if (status < 0) error stop "Cannot delete key"
   end subroutine udelete_index
 
   !> Reset the hash table to initial empty state
