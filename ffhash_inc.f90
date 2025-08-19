@@ -38,6 +38,8 @@
      integer                    :: hash_mask       = 0
      !> Maximum load factor for the hash table
      double precision           :: max_load_factor = 0.7d0
+     !> Whether storing an already existing key should throw an error
+     logical                    :: existing_key_is_error = .false.
 
      !> Flags indicating whether buckets are empty or deleted
      character, allocatable     :: flags(:)
@@ -177,7 +179,8 @@ contains
 
   !> Store key in the table, and return index. A negative index is returned in
   !> case of an error. If resizing fails, -1 is returned. If the key was
-  !> already present, the returned index is set to -2.
+  !> already present, and existing_key_is_error is true, the returned index is
+  !> set to -2.
   pure subroutine store_key(h, key, i)
     class(ffh_t), intent(inout) :: h
     FFH_KEY_ARG, intent(in)     :: key
@@ -208,11 +211,16 @@ contains
        do step = 1, h%n_buckets
           if (bucket_empty(h, i)) exit
 
-          ! If key is already present, set i = -2
+          ! Check if key is already present
           if (.not. bucket_deleted(h, i) .and. &
                keys_equal(h%keys(i), key)) then
-               i = -2
-               return
+             if (h%existing_key_is_error) then
+                ! Throw error
+                i = -2
+                return
+             else
+                exit
+             end if
           end if
 
           if (bucket_deleted(h, i)) i_deleted = i

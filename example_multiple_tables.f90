@@ -33,6 +33,10 @@ program test
 
   ! Try to store the same key twice
   call hb%store_key("first", i)
+
+  ! Now an error should be thrown when setting a key twice
+  hb%existing_key_is_error = .true.
+  call hb%store_key("first", i)
   if (i /= -2) error stop "Expected -2 for duplicate key"
 
   print *, "PASSED"
