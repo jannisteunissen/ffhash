@@ -449,12 +449,15 @@ contains
     FFH_KEY_ARG, intent(in) :: key
     integer                 :: hash
     integer, parameter      :: seed = 42
-#ifdef FFH_KEY_IS_STRING
-    call MurmurHash3_x86_32(key, len_trim(key), seed, hash)
+
+#if defined(FFH_CUSTOM_CONVERT_KEY)
+    call MurmurHash3_x86_32(convert_key(key), seed, hash)
+#elif defined(FFH_KEY_IS_STRING)
+    call MurmurHash3_x86_32(trim(key), seed, hash)
 #else
     integer, parameter      :: n_bytes = ceiling(storage_size(key)*0.125d0)
     character(len=n_bytes)  :: buf
-    call MurmurHash3_x86_32(transfer(key, buf), n_bytes, seed, hash)
+    call MurmurHash3_x86_32(transfer(key, buf), seed, hash)
 #endif
   end function hash_function
 
@@ -484,10 +487,9 @@ contains
     h = ieor(h, shiftr(h, 16))
   end function fmix32
 
-  pure subroutine MurmurHash3_x86_32(key, klen, seed, hash)
+  pure subroutine MurmurHash3_x86_32(key, seed, hash)
     use iso_fortran_env
-    integer, intent(in)             :: klen
-    character(len=klen), intent(in) :: key
+    character(len=*), intent(in)    :: key
     integer(int32), intent(in)      :: seed
     integer(int32), intent(out)     :: hash
     integer                         :: i, i0, n, nblocks
@@ -495,7 +497,9 @@ contains
     integer(int32), parameter       :: c1        = -862048943 ! 0xcc9e2d51
     integer(int32), parameter       :: c2        = 461845907  !0x1b873593
     integer, parameter              :: shifts(3) = [0, 8, 16]
+    integer                         :: klen
 
+    klen    = len(key)
     h1      = seed
     nblocks = shiftr(klen, 2)    ! nblocks/4
 
