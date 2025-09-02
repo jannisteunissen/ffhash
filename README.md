@@ -49,7 +49,7 @@ The following preprocessor commands can be used (on the input side):
   (`FFH_VAL_TYPE = FFH_STRING_VAL_TYPE` will be set automatically in `ffhash_inc.f90`.)  
 * `#define FFH_KEY_TYPE` (required) followed by a type name (e.g., `integer`, `real`, `type(my_type)`  
 * `#define FFH_VAL_TYPE` (optional) followed by a type name, so that keys can be associated with values.
-* `#define FFH_ENABLE_INT64` (optional) to use 64-bit integers internally for bucket indices, counters, and hash values.  
+* `#define FFH_ENABLE_INT64` (optional) to use 64-bit integers for bucket indices, counters, and hash values.  
   This allows handling very large tables (more than 2 billion buckets or keys).  
   If undefined, 32-bit integers are used by default, which is usually sufficient and slightly faster.  
 * `#define FFH_CUSTOM_KEYS_EQUAL` (optional) to define a custom function for comparing keys  
