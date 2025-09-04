@@ -1,4 +1,5 @@
 module m_ffhash
+  use iso_fortran_env
   implicit none
 #define FFH_KEY_TYPE integer
 #include "ffhash_inc.f90"
