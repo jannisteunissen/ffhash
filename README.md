@@ -6,7 +6,7 @@ The implementation is heavily inspired by [khash](https://github.com/attractivec
 Properties of the hash table:
 * [Open addressing](https://en.wikipedia.org/wiki/Open_addressing)
 * [Quadratic probing](https://en.wikipedia.org/wiki/Quadratic_probing) (but can easily be adjusted to linear probing)
-* [Murmur3_x86_32](http://code.google.com/p/smhasher/wiki/MurmurHash3) as default hash function, see also [murmur3-fortran](https://github.com/jannisteunissen/murmur3-fortran)
+* [Murmur3_x86_32 and MurmurHash3_x64_128](http://code.google.com/p/smhasher/wiki/MurmurHash3) as default hash functions, see also [murmur3-fortran](https://github.com/jannisteunissen/murmur3-fortran)
 * Generic: the keys and values can be of any type.
 
 Requirements
@@ -47,8 +47,6 @@ The following preprocessor commands can be used (on the input side):
 * `#define FFH_STRING_VAL_TYPE` (optional) followed by a character type declaration (e.g., `character(len=30)`).  
   This is an alternative for `FFH_VAL_TYPE` used for string values.  
   (`FFH_VAL_TYPE = FFH_STRING_VAL_TYPE` will be set automatically in `ffhash_inc.f90`.)  
-* `#define FFH_KEY_TYPE` (required) followed by a type name (e.g., `integer`, `real`, `type(my_type)`  
-* `#define FFH_VAL_TYPE` (optional) followed by a type name, so that keys can be associated with values.
 * `#define FFH_ENABLE_INT64` (optional) to use 64-bit integers for bucket indices, counters, and hash values.  
   This allows handling very large tables (more than 2 billion buckets or keys).  
   If undefined, 32-bit integers are used by default, which is usually sufficient and slightly faster.  
