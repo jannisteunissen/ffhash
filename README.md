@@ -38,24 +38,24 @@ end module m_example
 
 The following preprocessor commands can be used (on the input side):
 
-* `#define FFH_KEY_TYPE` (required) followed by a type name (e.g., `integer`, `real`, `type(my_type)`).  
-   This is the type of the keys stored in the hash table.  
-* `#define FFH_STRING_KEY_TYPE` followed by a character type declaration (e.g., `character(len=15)`).  
-  This is an alternative for `FFH_KEY_TYPE` used for string keys.  
+* `#define FFH_KEY_TYPE` (required) followed by a type name (e.g., `integer`, `real`, `type(my_type)`).
+   This is the type of the keys stored in the hash table.
+* `#define FFH_STRING_KEY_TYPE` followed by a character type declaration (e.g., `character(len=15)`).
+  This is an alternative for `FFH_KEY_TYPE` used for string keys.
   (If defined, `FFH_KEY_TYPE = FFH_STRING_KEY_TYPE` will be set automatically in `ffhash_inc.f90`.)
-* `#define FFH_VAL_TYPE` (optional) followed by a type name, so that keys can be associated with values.  
-* `#define FFH_STRING_VAL_TYPE` (optional) followed by a character type declaration (e.g., `character(len=30)`).  
-  This is an alternative for `FFH_VAL_TYPE` used for string values.  
-  (`FFH_VAL_TYPE = FFH_STRING_VAL_TYPE` will be set automatically in `ffhash_inc.f90`.)  
-* `#define FFH_ENABLE_INT64` (optional) to use 64-bit integers for bucket indices, counters, and hash values.  
-  This allows handling very large tables (more than 2 billion buckets or keys).  
-  If undefined, 32-bit integers are used by default, which is usually sufficient and slightly faster.  
-* `#define FFH_CUSTOM_KEYS_EQUAL` (optional) to define a custom function for comparing keys  
+* `#define FFH_VAL_TYPE` (optional) followed by a type name, so that keys can be associated with values.
+* `#define FFH_STRING_VAL_TYPE` (optional) followed by a character type declaration (e.g., `character(len=30)`).
+  This is an alternative for `FFH_VAL_TYPE` used for string values.
+  (`FFH_VAL_TYPE = FFH_STRING_VAL_TYPE` will be set automatically in `ffhash_inc.f90`.)
+* `#define FFH_ENABLE_INT64` (optional) to use 64-bit integers for bucket indices, counters, and hash values.
+  This allows handling very large tables (more than 2 billion buckets or keys).
+  If undefined, 32-bit integers are used by default, which is usually sufficient and slightly faster.
+* `#define FFH_CUSTOM_KEYS_EQUAL` (optional) to define a custom function for comparing keys
    (after the `#include "ffhash_inc.f90"` line).
-* `#define FFH_CUSTOM_CONVERT_KEY` (optional) to convert the key into a `character` buffer suitable for hashing.  
-   This gives full control over how keys are serialized (e.g., for derived types).  
-   If undefined, the library supplies default conversions for string and non-string keys.  
-* `#define FFH_CUSTOM_HASH_FUNCTION` (optional) to define a custom hash function  
+* `#define FFH_CUSTOM_CONVERT_KEY` (optional) to convert the key into a `character` buffer suitable for hashing.
+   This gives full control over how keys are serialized (e.g., for derived types).
+   If undefined, the library supplies default conversions for string and non-string keys.
+* `#define FFH_CUSTOM_HASH_FUNCTION` (optional) to define a custom hash function
    (after the `#include "ffhash_inc.f90"` line).
 
 A type `ffh_t` can be used after importing the created module, for example like this:
