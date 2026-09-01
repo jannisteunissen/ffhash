@@ -277,8 +277,8 @@ contains
     integer(FFH_INT_KIND)              :: n_new, i, j, step
     type(ffh_t)                        :: hnew
 
-    ! Make sure n_new is a power of two, and at least 4
-    n_new = 4
+    ! Make sure n_new is a power of two, and at least 64
+    n_new = 64
     do while (n_new < new_n_buckets)
        n_new = 2 * n_new
     end do
