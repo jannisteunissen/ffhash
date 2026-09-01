@@ -4,21 +4,21 @@
   ! implicit none
   ! #define FFH_KEY_TYPE integer                  !use this for non-string keys
   ! #define FFH_STRING_KEY_TYPE character(len=15) !use this for string keys
-                                                  !(FFH_KEY_TYPE = FFH_STRING_KEY_TYPE 
+                                                  !(FFH_KEY_TYPE = FFH_STRING_KEY_TYPE
                                                   !will be set in ffhash_inc.f90)
                                                   !
   ! #define FFH_VAL_TYPE integer (optional)       !use this for non-string values
-  ! #define FFH_STRING_VAL_TYPE character(len=30) !use this for string values 
-                                                  !(FFH_VAL_TYPE = FFH_STRING_VAL_TYPE 
+  ! #define FFH_STRING_VAL_TYPE character(len=30) !use this for string values
+                                                  !(FFH_VAL_TYPE = FFH_STRING_VAL_TYPE
                                                   !will be set in ffhash_inc.f90)
   ! #include "ffhash_inc.f90"
   ! end module m_ffhash
 
-  ! Defining FFH's integer kind 
+  ! Defining FFH's integer kind
 #ifdef FFH_ENABLE_INT64
-#define FFH_INT_KIND int64 
+#define FFH_INT_KIND int64
 #else
-#define FFH_INT_KIND int32 
+#define FFH_INT_KIND int32
 #endif
 
   ! Special handling of strings (which can be shortened)
@@ -35,8 +35,6 @@
 #else
 #define FFH_VAL_ARG FFH_VAL_TYPE
 #endif
-
-
 
   private
 
@@ -193,8 +191,8 @@ contains
 
   !> Store key in the table, and return index. A negative index is returned in
   !> case of an error. If resizing fails, -1 is returned. If the key was
-  !> already present, and existing_key_is_error (an optional flag to decide 
-  !> whether storing an already existing key should throw an error) is true, 
+  !> already present, and existing_key_is_error (an optional flag to decide
+  !> whether storing an already existing key should throw an error) is true,
   !> the returned index is set to -2.
   subroutine store_key(h, key, i, existing_key_is_error)
     class(ffh_t), intent(inout)        :: h
