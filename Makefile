@@ -1,7 +1,7 @@
 FC := gfortran
 FFLAGS := -Wall -O3 -cpp -g
 PROGS := example_custom_hash_function example_multiple_tables	\
-example_custom_types example_benchmark
+example_custom_types example_benchmark example_basic_tests
 
 .phony: all clean test
 
