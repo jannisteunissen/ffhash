@@ -400,12 +400,6 @@ contains
   subroutine reset(h)
     class(ffh_t), intent(inout) :: h
 
-    h%n_buckets       = 0
-    h%n_keys_stored   = 0
-    h%n_occupied      = 0
-    h%n_occupied_max  = 0
-    h%hash_mask       = 0
-
     if (h%n_buckets > 0) then
        deallocate(h%flags)
        deallocate(h%keys)
@@ -413,6 +407,12 @@ contains
        deallocate(h%vals)
 #endif
     end if
+
+    h%n_buckets       = 0
+    h%n_keys_stored   = 0
+    h%n_occupied      = 0
+    h%n_occupied_max  = 0
+    h%hash_mask       = 0
   end subroutine reset
 
   pure logical function bucket_empty(h, i)
