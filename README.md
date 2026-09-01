@@ -7,7 +7,7 @@ Properties of the hash table:
 * [Open addressing](https://en.wikipedia.org/wiki/Open_addressing)
 * [Quadratic probing](https://en.wikipedia.org/wiki/Quadratic_probing) (but can easily be adjusted to linear probing)
 * [Murmur3_x86_32 and MurmurHash3_x64_128](http://code.google.com/p/smhasher/wiki/MurmurHash3) as default hash functions, see also [murmur3-fortran](https://github.com/jannisteunissen/murmur3-fortran)
-* Generic: the keys and values can be of any type.
+* The keys and values can be of any type, but they cannot have allocatable or pointer components since a `transfer` operation is performed on them.
 
 Requirements
 ==
