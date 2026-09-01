@@ -528,20 +528,20 @@ contains
        k2 = transfer(key(i*16-7:i*16), k2)
 
        k1 = k1 * c1
-       k1 = rotl64(k1,31_int64)
+       k1 = rotl64(k1, 31)
        k1 = k1 * c2
 
        h1 = ieor(h1, k1)
-       h1 = rotl64(h1,27_int64)
+       h1 = rotl64(h1, 27)
        h1 = h1 + h2
        h1 = h1 * 5 + 1390208809_int64 ! 0x52dce729
 
        k2 = k2 * c2
-       k2 = rotl64(k2,33_int64)
+       k2 = rotl64(k2, 33)
        k2 = k2 * c1
 
        h2 = ieor(h2, k2)
-       h2 = rotl64(h2,31_int64)
+       h2 = rotl64(h2, 31)
        h2 = h1 + h2
        h2 = h2 * 5 + 944331445 ! 0x38495ab5
     end do
@@ -559,7 +559,7 @@ contains
     ! Check if the above loop was executed
     if (i >= 9) then
        k2 = k2 * c2
-       k2  = rotl64(k2,33_int64)
+       k2  = rotl64(k2, 33)
        k2 = k2 * c1
        h2 = ieor(h2, k2)
     end if
@@ -571,7 +571,7 @@ contains
     ! Check if the above loop was executed
     if (i >= 1) then
        k1 = k1 * c1
-       k1 = rotl64(k1,31_int64)
+       k1 = rotl64(k1, 31)
        k1 = k1 * c2
        h1 = ieor(h1, k1)
     end if
@@ -594,7 +594,7 @@ contains
 
   pure integer(int64) function rotl64(x, r)
     integer(int64), intent(in) :: x
-    integer(int64), intent(in)  :: r
+    integer(int32), intent(in) :: r
     rotl64 = ior(shiftl(x, r), shiftr(x, (64 - r)))
   end function rotl64
 
@@ -629,11 +629,11 @@ contains
        k1 = transfer(key(i*4-3:i*4), k1)
 
        k1 = k1 * c1
-       k1 = rotl32(k1,15_int64)
+       k1 = rotl32(k1, 15)
        k1 = k1 * c2
 
        h1 = ieor(h1, k1)
-       h1 = rotl32(h1,13_int64)
+       h1 = rotl32(h1, 13)
        h1 = h1 * 5 - 430675100  ! 0xe6546b64
     end do
 
@@ -649,7 +649,7 @@ contains
     ! Check if the above loop was executed
     if (i >= 1) then
        k1 = k1 * c1
-       k1 = rotl32(k1,15_int64)
+       k1 = rotl32(k1, 15)
        k1 = k1 * c2
        h1 = ieor(h1, k1)
     end if
@@ -662,7 +662,7 @@ contains
 
   pure integer(int32) function rotl32(x, r)
     integer(int32), intent(in) :: x
-    integer(int64), intent(in)  :: r
+    integer(int32), intent(in)  :: r
     rotl32 = ior(shiftl(x, r), shiftr(x, (32 - r)))
   end function rotl32
 
