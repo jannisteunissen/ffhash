@@ -14,7 +14,7 @@ module m_ffhash
     hash = 5381
     do n = 1, len(key)
        ! hash * 33 + c
-       hash = (shiftl(hash, 5) + hash) + iachar(key(n:n))
+       hash = (ishft(hash, 5) + hash) + iachar(key(n:n))
     end do
   end function hash_function
 end module m_ffhash

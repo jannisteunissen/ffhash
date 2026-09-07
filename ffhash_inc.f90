@@ -518,7 +518,7 @@ contains
 
     h1      = seed
     h2      = seed
-    nblocks = shiftr(klen, 4)    ! nblocks / 16
+    nblocks = ishft(klen, -4)    ! nblocks / 16
 
     ! body
     do i = 1, nblocks
@@ -551,7 +551,7 @@ contains
     i0 = 16 * nblocks
 
     do n = i, 9, -1
-       k2 = ieor(k2, shiftl(iachar(key(i0+n:i0+n), int64), shifts(n)))
+       k2 = ieor(k2, ishft(iachar(key(i0+n:i0+n), int64), shifts(n)))
     end do
 
     ! Check if the above loop was executed
@@ -563,7 +563,7 @@ contains
     end if
 
     do n = min(i, 8), 1, -1
-       k1 = ieor(k1, shiftl(iachar(key(i0+n:i0+n), int64), shifts(n)))
+       k1 = ieor(k1, ishft(iachar(key(i0+n:i0+n), int64), shifts(n)))
     end do
 
     ! Check if the above loop was executed
@@ -593,17 +593,17 @@ contains
   pure integer(int64) function rotl64(x, r)
     integer(int64), intent(in) :: x
     integer(int32), intent(in) :: r
-    rotl64 = ior(shiftl(x, r), shiftr(x, (64 - r)))
+    rotl64 = ior(ishft(x, r), ishft(x, r - 64))
   end function rotl64
 
   pure integer(int64) function fmix64(k_in) result(k)
     integer(int64), intent(in) :: k_in
     k = k_in
-    k = ieor(k, shiftr(k, 33))
+    k = ieor(k, ishft(k, -33))
     k = k * (-49064778989728563_int64) !0xff51afd7ed558ccd
-    k = ieor(k, shiftr(k, 33))
+    k = ieor(k, ishft(k, -33))
     k = k * (-4265267296055464877_int64) !0xc4ceb9fe1a85ec53
-    k = ieor(k, shiftr(k, 33))
+    k = ieor(k, ishft(k, -33))
   end function fmix64
 
 #else
@@ -620,7 +620,7 @@ contains
     integer, parameter              :: shifts(3) = [0, 8, 16]
 
     h1      = seed
-    nblocks = shiftr(klen, 2)    ! nblocks/4
+    nblocks = ishft(klen, -2)    ! nblocks/4
 
     ! body
     do i = 1, nblocks
@@ -641,7 +641,7 @@ contains
     i0 = 4 * nblocks
 
     do n = i, 1, -1
-       k1 = ieor(k1, shiftl(iachar(key(i0+n:i0+n)), shifts(n)))
+       k1 = ieor(k1, ishft(iachar(key(i0+n:i0+n)), shifts(n)))
     end do
 
     ! Check if the above loop was executed
@@ -661,18 +661,18 @@ contains
   pure integer(int32) function rotl32(x, r)
     integer(int32), intent(in) :: x
     integer(int32), intent(in)  :: r
-    rotl32 = ior(shiftl(x, r), shiftr(x, (32 - r)))
+    rotl32 = ior(ishft(x, r), ishft(x, r - 32))
   end function rotl32
 
   ! Finalization mix - force all bits of a hash block to avalanche
   pure integer(int32) function fmix32(h_in) result(h)
     integer(int32), intent(in) :: h_in
     h = h_in
-    h = ieor(h, shiftr(h, 16))
+    h = ieor(h, ishft(h, -16))
     h = h * (-2048144789) !0x85ebca6b
-    h = ieor(h, shiftr(h, 13))
+    h = ieor(h, ishft(h, -13))
     h = h * (-1028477387) !0xc2b2ae35
-    h = ieor(h, shiftr(h, 16))
+    h = ieor(h, ishft(h, -16))
   end function fmix32
 #endif
 #endif
