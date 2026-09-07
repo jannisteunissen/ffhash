@@ -84,7 +84,7 @@ do i = 0, h%n_buckets-1
 end do
 ```
 
-Below is the full list of (public) methods included. The variants starting with a `u` call `error stop` in case of errors. The variants without a `u` have an additional `status` argument, which is `-1` in case of errors and zero otherwise.
+Below is the full list of (public) methods included. The variants starting with a `u` call `error stop` in case of errors. The variants without a `u` have an additional `status` argument, which is `-1` in case of errors and the index of the key otherwise.
 
 | name | description |
 |---|---|
