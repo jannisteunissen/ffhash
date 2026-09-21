@@ -100,7 +100,9 @@ Below is the full list of (public) methods included. The variants starting with 
 | `resize` | Manually resize the hash table (happens automatically) |
 | `reset` | Reset the hash table to initial empty state |
 | `hash_function` | Hash function |
-| `convert_key`      | Function to convert a key to a string buffer before hashing (optional, user-supplied) |
+| `convert_key`      | Function to convert a key to a string buffer before hashing (optional, user-supplied function) |
+
+**Note:** The `ffh_t` type contains a tunable `max_load_factor` component (default 0.7). This value can be adjusted to control when automatic resizing occurs.
 
 Links
 ==
